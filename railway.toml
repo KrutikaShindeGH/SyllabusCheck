@@ -1,11 +1,11 @@
 # railway.toml — SyllabusCheck API (root of repo)
-# This file is used when you link the WHOLE repo to the API service in Railway.
 # For the Worker service, override the start command in the Railway dashboard
 # to: celery -A core.celery_app worker --loglevel=info -Q default,scrape,nlp,coverage
 
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "backend/Dockerfile"
+buildContext = "backend"
 
 [deploy]
 startCommand = "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port $PORT"
