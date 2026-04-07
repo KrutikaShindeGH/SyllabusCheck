@@ -14,3 +14,4 @@ node_modules/
 *.log
 Receipt*.pdf
 railway_deployment/railway/railway_deployment/
+backend/celerybeat-schedule
