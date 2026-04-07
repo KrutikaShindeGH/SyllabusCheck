@@ -3,6 +3,7 @@ SyllabusCheck — FastAPI Application Entry Point (Phase 7 update)
 Adds google_auth router + creates /app/reports dir on startup.
 """
 import os
+print("DATABASE_URL:", os.getenv("DATABASE_URL"))
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
