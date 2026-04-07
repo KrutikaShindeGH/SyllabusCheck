@@ -19,7 +19,7 @@ RUN python -m spacy download en_core_web_sm && \
     pip cache purge
 
 # Copy source
-COPY . .
+COPY --exclude=.env --exclude=.env.* . .
 
 RUN mkdir -p /app/uploads /app/reports
 
