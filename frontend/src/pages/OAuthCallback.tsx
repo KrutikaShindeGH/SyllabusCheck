@@ -25,7 +25,7 @@ export default function OAuthCallback() {
     }
 
     // Synthetic user object (matches what /auth/me returns)
-    const user = { email, full_name: name, role: "professor" };
+    const user = { id: "", email, full_name: name, role: "professor" };
     setAuth(user, accessToken);
 
     // Clean the URL so tokens don't linger in browser history
