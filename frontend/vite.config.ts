@@ -20,7 +20,6 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        // Split vendor chunks for better caching
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
           charts: ['recharts'],
@@ -29,3 +28,4 @@ export default defineConfig({
     },
   },
 })
+

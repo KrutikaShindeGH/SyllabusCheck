@@ -2,7 +2,7 @@
 import axios from 'axios'
 import { useAuthStore } from '../store/authStore'
 
-// In Railway production, VITE_API_URL is set to the backend service URL
+// In production (Vercel), set VITE_API_URL to your Railway backend URL,
 // e.g. https://syllacheck-api.up.railway.app
 // In local dev, the Vite proxy forwards /api → http://localhost:8000
 const BASE_URL = import.meta.env.VITE_API_URL

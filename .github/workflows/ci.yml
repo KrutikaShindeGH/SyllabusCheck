@@ -65,15 +65,14 @@ jobs:
 
       - name: Install and build
         env:
-          # Use a dummy URL for CI build validation
           VITE_API_URL: https://placeholder.up.railway.app
         run: |
           cd frontend
           npm ci
           npm run build
 
-  # ── Deploy to Railway (main branch only) ───────────────────────────────
-  deploy:
+  # ── Deploy Backend → Railway (main branch only) ────────────────────────
+  deploy-backend:
     needs: [backend-test, frontend-test]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
@@ -87,17 +86,43 @@ jobs:
       - name: Deploy API service
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: |
-          railway up --service syllacheck-api --detach
+        run: railway up --service syllacheck-api --detach
 
       - name: Deploy Worker service
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: |
-          railway up --service syllacheck-worker --detach
+        run: railway up --service syllacheck-worker --detach
 
-      - name: Deploy Frontend service
+  # ── Deploy Frontend → Vercel (main branch only) ────────────────────────
+  deploy-frontend:
+    needs: [backend-test, frontend-test]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy to Vercel
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          railway up --service syllacheck-frontend --detach
+          cd frontend
+          vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+          vercel build --prod --token=$VERCEL_TOKEN
+          vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+
+
+
+          
