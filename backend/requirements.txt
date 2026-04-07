@@ -52,3 +52,7 @@ anthropic==0.28.0
 # psycopg2-binary removed — asyncpg covers async DB; add back only if Celery result backend needs it
 rapidfuzz==3.9.3
 
+# requirements.txt — add this back
+psycopg2-binary==2.9.9
+
+

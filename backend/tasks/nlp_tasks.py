@@ -11,16 +11,19 @@ from core.config import settings
 from models.models import Course, JobPosting, Keyword, JobKeyword
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import create_async_engine 
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 logger = logging.getLogger(__name__)
 
 sync_engine = create_engine(
-    settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql+psycopg2://"),
+    settings.DATABASE_URL
+        .replace("postgresql+asyncpg://", "postgresql://")
+        .replace("postgresql+psycopg2://", "postgresql://")
+        .replace("postgresql://", "postgresql+psycopg2://"),
     pool_pre_ping=True,
 )
-
 
 # ── Robust JSON parser ─────────────────────────────────────────────────────────
 
