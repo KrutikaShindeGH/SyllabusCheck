@@ -2,6 +2,7 @@
 SyllabusCheck — FastAPI Application Entry Point (Phase 7 update)
 Adds google_auth router + creates /app/reports dir on startup.
 """
+from email.mime import text
 import os
 print("DATABASE_URL:", os.getenv("DATABASE_URL"))
 from contextlib import asynccontextmanager
@@ -23,6 +24,7 @@ async def lifespan(app: FastAPI):
     os.makedirs(settings.REPORT_DIR, exist_ok=True)
 
     async with engine.begin() as conn:
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         await conn.run_sync(Base.metadata.create_all)
     yield
     await engine.dispose()
