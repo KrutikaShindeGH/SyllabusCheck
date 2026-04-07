@@ -1,0 +1,124 @@
+services:
+  # ── PostgreSQL + pgvector ──────────────────────────────────────────
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: syllacheck_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-syllacheck}
+      POSTGRES_USER: ${POSTGRES_USER:-syllacheck}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-syllacheck}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis (cache + Celery broker) ─────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: syllacheck_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── FastAPI Backend ────────────────────────────────────────────────
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: syllacheck_api
+    restart: unless-stopped
+    env_file: .env                    # ← load .env first
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - uploads_data:/app/uploads
+      - reports_data:/app/reports
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  # ── Celery Worker ─────────────────────────────────────────────────
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: syllacheck_worker
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./backend:/app
+      - uploads_data:/app/uploads
+      - reports_data:/app/reports 
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A core.celery_app worker --loglevel=info --concurrency=1
+
+  # ── Celery Beat (scheduler) ────────────────────────────────────────
+  beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: syllacheck_beat
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - redis
+      - worker
+    command: celery -A core.celery_app beat --loglevel=info
+
+  # ── React Frontend ─────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: syllacheck_frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app          
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000
+
+  # ── Nginx reverse proxy ────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: syllacheck_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+      - frontend
+
+volumes:
+  postgres_data:
+  redis_data:
+  uploads_data:
+  reports_data:

@@ -1,0 +1,265 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+import logging
+import numpy as np
+from typing import List, Dict, Any, Optional
+from sqlalchemy import create_engine, text
+
+from core.config import settings
+
+logger = logging.getLogger(__name__)
+
+DATABASE_URL_SYNC = settings.DATABASE_URL.replace(
+    "postgresql+asyncpg://", "postgresql+psycopg2://"
+)
+sync_engine = create_engine(DATABASE_URL_SYNC, pool_pre_ping=True)
+
+# ── Coverage score formula ─────────────────────────────────────────────────────
+# covered = 1.0 point  (skill is fully taught)
+# partial = 0.5 point  (skill is partially taught — half credit)
+# Score is computed against top 50 keywords by frequency (most in-demand skills)
+# so both Coverage Matrix and Gap Analysis always show the same number.
+COVERED_WEIGHT = 1.0
+PARTIAL_WEIGHT = 0.5
+
+
+def _compute_score(covered: int, partial: int, total: int) -> float:
+    if total == 0:
+        return 0.0
+    return (covered * COVERED_WEIGHT + partial * PARTIAL_WEIGHT) / total * 100
+
+
+def _get_percentile_thresholds(frequencies: List[int]) -> Dict[str, float]:
+    if not frequencies:
+        return {"critical": 0, "high": 0, "medium": 0}
+    arr = np.array(frequencies)
+    return {
+        "critical": float(np.percentile(arr, 70)),
+        "high":     float(np.percentile(arr, 40)),
+        "medium":   float(np.percentile(arr, 20)),
+    }
+
+
+def _tier_from_frequency(freq: int, thresholds: Dict[str, float]) -> str:
+    if freq >= thresholds["critical"]:
+        return "critical"
+    if freq >= thresholds["high"]:
+        return "high"
+    if freq >= thresholds["medium"]:
+        return "medium"
+    return "low"
+
+
+def get_gap_analysis(course_id: str, limit_keywords: int = 50) -> Dict[str, Any]:
+    with sync_engine.connect() as conn:
+        course_row = conn.execute(
+            text("SELECT domain FROM courses WHERE id = :id"),
+            {"id": course_id}
+        ).fetchone()
+
+        if not course_row:
+            raise ValueError(f"Course {course_id} not found")
+
+        # ── Summary: count from top N keywords only (matches Coverage Matrix) ──
+        summary_rows = conn.execute(text("""
+            SELECT cr.status, COUNT(*) as cnt
+            FROM coverage_rows cr
+            JOIN keywords k ON k.id = cr.keyword_id
+            WHERE cr.course_id = :cid
+              AND cr.keyword_id IN (
+                SELECT cr2.keyword_id
+                FROM coverage_rows cr2
+                JOIN keywords k2 ON k2.id = cr2.keyword_id
+                WHERE cr2.course_id = :cid
+                ORDER BY k2.frequency DESC
+                LIMIT :lim
+              )
+            GROUP BY cr.status
+        """), {"cid": course_id, "lim": limit_keywords}).fetchall()
+
+        summary = {"covered": 0, "partial": 0, "missing": 0, "total": 0}
+        for r in summary_rows:
+            summary[r[0]] = r[1]
+        summary["total"] = sum(summary[s] for s in ["covered", "partial", "missing"])
+
+        coverage_score = _compute_score(
+            summary["covered"], summary["partial"], summary["total"]
+        )
+
+        # ── Gap rows: show ALL missing/partial so professors see full picture ──
+        gap_rows = conn.execute(text("""
+            SELECT
+                k.id::text          AS keyword_id,
+                k.text              AS keyword,
+                k.normalized        AS normalized,
+                k.category          AS category,
+                k.domain            AS domain,
+                k.subdomain         AS subdomain,
+                k.frequency         AS frequency,
+                k.is_emerging       AS is_emerging,
+                cr.status           AS status,
+                cr.similarity_score AS score
+            FROM coverage_rows cr
+            JOIN keywords k ON k.id = cr.keyword_id
+            WHERE cr.course_id = :cid
+              AND cr.status IN ('missing', 'partial')
+            ORDER BY k.frequency DESC
+        """), {"cid": course_id}).fetchall()
+
+    frequencies = [r.frequency for r in gap_rows]
+    thresholds  = _get_percentile_thresholds(frequencies)
+
+    gaps: Dict[str, List[Dict]] = {"critical": [], "high": [], "medium": [], "low": []}
+
+    for r in gap_rows:
+        tier = _tier_from_frequency(r.frequency, thresholds)
+        gaps[tier].append({
+            "keyword_id":   r.keyword_id,
+            "keyword":      r.keyword,
+            "normalized":   r.normalized,
+            "category":     r.category,
+            "domain":       r.domain,
+            "subdomain":    r.subdomain,
+            "frequency":    r.frequency,
+            "is_emerging":  r.is_emerging,
+            "status":       r.status,
+            "score":        round(r.score, 4),
+            "tier":         tier,
+        })
+
+    return {
+        "course_id":      course_id,
+        "coverage_score": round(coverage_score, 2),
+        "summary":        summary,
+        "thresholds":     thresholds,
+        "gaps":           gaps,
+        "total_gaps":     len(gap_rows),
+    }
+
+
+def get_coverage_matrix(limit_keywords: int = 50) -> Dict[str, Any]:
+    """
+    Returns per-course coverage data.
+    For each course, fetches top N keywords FROM THAT COURSE'S OWN DOMAIN.
+    This ensures Accounting courses show Accounting keywords, CS shows CS, etc.
+    """
+    with sync_engine.connect() as conn:
+        # All courses with domain info
+        course_rows = conn.execute(text("""
+            SELECT id::text, title, code, coverage_score, domain
+            FROM courses
+            ORDER BY created_at
+        """)).fetchall()
+
+        if not course_rows:
+            return {"keywords": [], "courses": [], "cells": {}, "course_details": []}
+
+        # For each course, fetch its top N keywords by frequency
+        all_keyword_ids = set()
+        course_keyword_map: Dict[str, List[str]] = {}  # course_id -> [keyword_ids]
+
+        for c in course_rows:
+            course_id = c[0]
+            course_domain = c[4]
+
+            if not course_domain:
+                continue
+
+            kw_rows = conn.execute(text("""
+                SELECT k.id::text
+                FROM coverage_rows cr
+                JOIN keywords k ON k.id = cr.keyword_id
+                WHERE cr.course_id = :cid
+                ORDER BY k.frequency DESC
+                LIMIT :lim
+            """), {"cid": course_id, "lim": limit_keywords}).fetchall()
+
+            kw_ids = [r[0] for r in kw_rows]
+            course_keyword_map[course_id] = kw_ids
+            all_keyword_ids.update(kw_ids)
+
+        # Fetch full keyword details for all collected keyword IDs
+        keywords_by_id: Dict[str, Dict] = {}
+        if all_keyword_ids:
+            kw_detail_rows = conn.execute(text("""
+                SELECT id::text, text, category, domain, subdomain, frequency
+                FROM keywords
+                WHERE id::text = ANY(:ids)
+            """), {"ids": list(all_keyword_ids)}).fetchall()
+
+            for r in kw_detail_rows:
+                keywords_by_id[r[0]] = {
+                    "id": r[0], "text": r[1], "category": r[2],
+                    "domain": r[3], "subdomain": r[4], "frequency": r[5]
+                }
+
+        # Fetch all coverage cells
+        course_ids = [c[0] for c in course_rows]
+        cells: Dict[str, Dict] = {}
+
+        if all_keyword_ids and course_ids:
+            cell_rows = conn.execute(text("""
+                SELECT
+                    cr.course_id::text,
+                    cr.keyword_id::text,
+                    cr.status,
+                    cr.similarity_score
+                FROM coverage_rows cr
+                WHERE cr.keyword_id::text = ANY(:kw_ids)
+                  AND cr.course_id::text  = ANY(:c_ids)
+            """), {
+                "kw_ids": list(all_keyword_ids),
+                "c_ids":  course_ids,
+            }).fetchall()
+
+            for r in cell_rows:
+                cells[f"{r[0]}_{r[1]}"] = {"status": r[2], "score": round(r[3], 4)}
+
+    # Build per-course detail objects with their own keyword lists
+    course_details = []
+    for c in course_rows:
+        course_id = c[0]
+        kw_ids = course_keyword_map.get(course_id, [])
+        course_kws = [keywords_by_id[kid] for kid in kw_ids if kid in keywords_by_id]
+        course_kws.sort(key=lambda x: x["frequency"], reverse=True)
+
+        # Compute covered/partial/missing counts for this course's top N keywords
+        covered = partial = missing = 0
+        for kid in kw_ids:
+            cell = cells.get(f"{course_id}_{kid}")
+            if cell:
+                if cell["status"] == "covered":   covered += 1
+                elif cell["status"] == "partial":  partial += 1
+                else:                              missing += 1
+
+        # Use shared formula — same weights as get_gap_analysis
+        score = _compute_score(covered, partial, len(kw_ids))
+
+        course_details.append({
+            "id":             course_id,
+            "title":          c[1],
+            "code":           c[2],
+            "coverage_score": round(score, 1),
+            "domain":         c[4],
+            "keywords":       course_kws,
+            "summary": {
+                "covered": covered,
+                "partial": partial,
+                "missing": missing,
+                "total":   len(kw_ids),
+            },
+        })
+
+    # Flat global keyword list for legacy compat
+    all_kws_sorted = sorted(keywords_by_id.values(), key=lambda x: x["frequency"], reverse=True)
+
+    return {
+        "keywords":       all_kws_sorted[:limit_keywords],
+        "courses":        [{"id": c[0], "title": c[1], "code": c[2],
+                           "coverage_score": c[3], "domain": c[4]} for c in course_rows],
+        "cells":          cells,
+        "course_details": course_details,
+    }
+

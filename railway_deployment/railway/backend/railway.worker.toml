@@ -1,0 +1,18 @@
+# railway.toml — SyllabusCheck Celery Worker
+# Place this file at: backend/railway.worker.toml
+#
+# In Railway dashboard, create a second service from the same
+# /backend directory, then override the start command to:
+#   celery -A core.celery_app worker --loglevel=info -Q default,scrape,nlp,coverage
+#
+# OR: duplicate the API service in Railway and change just the
+# start command — Railway lets you override it per-service.
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "celery -A core.celery_app worker --loglevel=info -Q default,scrape,nlp,coverage"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5
