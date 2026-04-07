@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
 
     # ── Database ───────────────────────────────────────────────────────
-    DATABASE_URL: str = "postgresql+asyncpg://syllacheck:devpassword@db:5432/syllacheck"
+    DATABASE_URL: str = ""
     POSTGRES_DB: str = "syllacheck"
     POSTGRES_USER: str = "syllacheck"
     POSTGRES_PASSWORD: str = "devpassword"
