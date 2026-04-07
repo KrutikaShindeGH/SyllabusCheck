@@ -4,7 +4,6 @@ Adds google_auth router + creates /app/reports dir on startup.
 """
 from sqlalchemy import text
 import os
-print("DATABASE_URL:", os.getenv("DATABASE_URL"))
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
