@@ -162,3 +162,23 @@ async def emerging_keywords(
     ]
 
 
+
+@router.post("/backfill-embeddings")
+async def trigger_backfill_embeddings(
+    batch_size: int = Query(default=200, ge=50, le=500),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Backfill embeddings for all keywords that have NULL embeddings.
+    Run this once after importing keywords without embeddings.
+    Without embeddings, coverage computation returns 0 for all courses.
+    """
+    from tasks.classify_tasks import backfill_keyword_embeddings
+    task = backfill_keyword_embeddings.delay(batch_size=batch_size)
+    logger.info(f"[Keywords API] backfill_keyword_embeddings queued — task_id={task.id}")
+    return {
+        "message": "Embedding backfill started",
+        "task_id": task.id,
+        "note": "This may take 5-10 minutes for 5000+ keywords. Watch worker logs.",
+    }
+

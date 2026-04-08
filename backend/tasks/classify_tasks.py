@@ -177,6 +177,61 @@ def classify_keyword_subdomains(self, domain: str = "Computer Science", batch_si
     except Exception as exc:
         logger.error(f"[ClassifyTask] Fatal error: {exc}", exc_info=True)
         raise self.retry(exc=exc, countdown=60)
-    
 
+
+@celery_app.task(name="tasks.classify_tasks.backfill_keyword_embeddings", bind=True, max_retries=1)
+def backfill_keyword_embeddings(self, batch_size: int = 200):
+    """
+    Backfill embeddings for all keywords that have NULL embeddings.
+    Uses sentence-transformers all-MiniLM-L6-v2 (local, no API key needed).
+    Run once after importing keywords without embeddings.
+    """
+    from services.nlp.embeddings import get_embeddings_batch
+
+    logger.info("[EmbedTask] backfill_keyword_embeddings started")
+
+    try:
+        with sync_engine.connect() as conn:
+            rows = conn.execute(text("""
+                SELECT id::text, text
+                FROM keywords
+                WHERE embedding IS NULL
+                ORDER BY frequency DESC
+            """)).fetchall()
+
+            total = len(rows)
+            logger.info(f"[EmbedTask] Found {total} keywords missing embeddings")
+
+            if total == 0:
+                return {"message": "All keywords already have embeddings", "updated": 0}
+
+            updated = 0
+            for i in range(0, total, batch_size):
+                batch = rows[i:i + batch_size]
+                texts = [r[1] for r in batch]
+                ids = [r[0] for r in batch]
+
+                batch_num = i // batch_size + 1
+                total_batches = (total + batch_size - 1) // batch_size
+                logger.info(f"[EmbedTask] Batch {batch_num}/{total_batches} ({len(batch)} keywords)...")
+
+                embeddings = get_embeddings_batch(texts)
+
+                for kw_id, embedding in zip(ids, embeddings):
+                    if embedding:
+                        conn.execute(text("""
+                            UPDATE keywords SET embedding = :emb WHERE id = :id
+                        """), {"emb": str(embedding), "id": kw_id})
+                        updated += 1
+
+                conn.commit()
+                logger.info(f"[EmbedTask] Batch {batch_num} done — embedded {len([e for e in embeddings if e])}/{len(batch)}")
+
+        logger.info(f"[EmbedTask] Done — updated={updated}/{total}")
+        return {"total": total, "updated": updated}
+
+    except Exception as exc:
+        logger.error(f"[EmbedTask] Fatal error: {exc}", exc_info=True)
+        raise self.retry(exc=exc, countdown=60)
+    
     
