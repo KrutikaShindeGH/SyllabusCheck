@@ -15,3 +15,7 @@ node_modules/
 Receipt*.pdf
 railway_deployment/railway/railway_deployment/
 backend/celerybeat-schedule
+*.csv
+backup.sql
+backup_clean.sql
+keywords.sql
