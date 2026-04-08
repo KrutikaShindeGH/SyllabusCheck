@@ -25,6 +25,11 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         await conn.run_sync(Base.metadata.create_all)
+        # Idempotent: add subdomain column to keywords if it doesn't exist yet
+        await conn.execute(text("""
+            ALTER TABLE keywords
+            ADD COLUMN IF NOT EXISTS subdomain VARCHAR(100)
+        """))
     yield
     await engine.dispose()
 
@@ -57,3 +62,4 @@ app.include_router(jobs.router,          prefix="/api/jobs",     tags=["jobs"])
 app.include_router(coverage.router,      prefix="/api/coverage", tags=["coverage"])
 app.include_router(keywords.router,      prefix="/api/keywords", tags=["keywords"])
 app.include_router(reports.router,       prefix="/api/reports",  tags=["reports"])
+
