@@ -99,6 +99,7 @@ class Keyword(Base):
     text: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     normalized: Mapped[str] = mapped_column(String(255), nullable=False, index=True)  # lowercase, no spaces
     domain: Mapped[Optional[str]] = mapped_column(String(100))
+    subdomain: Mapped[Optional[str]] = mapped_column(String(100))    # e.g. AI/ML, Cybersecurity, Data Science
     embedding: Mapped[Optional[list]] = mapped_column(Vector(384))   # OpenAI text-embedding-3-small
     frequency: Mapped[int] = mapped_column(Integer, default=0) 
     category: Mapped[Optional[str]] = mapped_column(String(100))
@@ -157,3 +158,6 @@ class Report(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now_utc)
 
     owner: Mapped["User"] = relationship(back_populates="reports")
+
+
+    

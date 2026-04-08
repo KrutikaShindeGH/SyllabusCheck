@@ -15,6 +15,7 @@ celery_app = Celery(
         "tasks.nlp_tasks",
         "tasks.coverage_tasks",
         "tasks.report_tasks",
+        "tasks.classify_tasks",
     ],
 )
 
@@ -56,3 +57,4 @@ celery_app.conf.beat_schedule = {
         "schedule": crontab(hour=5, minute=0),
     },
 }
+

@@ -1,0 +1,1037 @@
+id,owner_id,title,code,semester,domain,file_path,raw_text,parsed_topics,parsed_sections,coverage_score,status,created_at,updated_at
+57eb5a91-2ff7-4883-9c6a-958effbf90ec,1461cfa0-b5f2-405e-8202-c707215ffd5f,CS_AI,,,Computer Science/AI/ML,/app/uploads/402816b5-a35a-4a86-bfa0-6f02850b08c8.pdf,"Course Syllabus
+Course Information
+(course number, course title, term, any specific section title)
+Course Prefix, Number, Section
+CS 6364.501
+Course Title
+CS 6364 Artificial Intelligence
+Term
+Spring 2017
+Professor Contact Information
+(Professor’s name, phone number, email, office location, office hours, other information)
+Name: Richard Min, Ph.D.
+Office Telephone: 972-883-4522
+Email: rkm010300@utdallas.edu
+Office: ECSS 4.609
+Office Hours: Tuesday & Thursday 1pm-4pm, Monday & Wednesday 7pm-9pm
+Course Pre-requisites, Co-requisites, and/or Other Restrictions
+(including required prior knowledge or skills)
+Prerequisite: CS 5343
+Course Description
+CS 6364 Artificial Intelligence (3 semester hours) Design of machines that exhibit
+intelligence. Particular topics include: representation of knowledge, vision, natural
+language processing, search, logic and deduction, expert systems, planning, language
+comprehension, machine learning. Prerequisite: CS 5343. (3-0) Y
+Student Learning Objectives/Outcomes
+After successful completion of this course, the student should be able to:
+1. Understand and use problem searching agents (informed and uninformed methods)
+2. Understand and use game playing techniques
+3. Understand and use agents that reason logically
+4. Understand and use building knowledge bases and theorem proving
+5. Understand and use uncertainty and probabilistic reasoning
+Required Textbooks and Materials
+Course Syllabus Page 1
+Required Textbooks
+Artificial Intelligence, A Modern Approach. 3ed. Stuart Russell and Peter Norvig. Prentice Hall,
+2010. ISBN-13: 860-1419506989 ISBN-10: 0136042597. http://aima.cs.berkeley.edu/
+(This is our primary Textbook)
+Paradigms of Artificial Intelligence Programming. Peter Norvig
+© 2014 Morgan Kaufmann. Web ISBN-13: 978-0-08-057115-7
+Print ISBN-13: 978-1-55860-191-8.
+(Available online free access via UTD ebook safari)
+Knowledge Representation, Reasoning, and the Design of Intelligent Agents. Michael Gelfond;
+Yulia Kahl. © 2014 Cambridge University Press. Print ISBN: 978-1-107-02956-9
+(Available online free access via UTD ebook safari)
+Logic for Computer Science and Artificial Intelligence. Ricardo Caferra. © 2011 John Wiley &
+Sons. ISBN: 978-1-848-21301-2.
+(Available online free access via UTD ebook safari)
+Logic, Programming and Prolog, 2ed. by Ulf Nilsson and Jan Maluszynski. ©2000 by Nilsson
+and Maluszynski. http://www.ida.liu.se/~ulfni53/lpp/
+(Available online)
+Required Materials
+ AIMA - the textbook online resource: http://aima.cs.berkeley.edu/
+ LISP. Common Lisp. http://www.clisp.org/
+ Common Lisp Language, 2ed. by Guy L. Steele.
+http://www.cs.cmu.edu/Groups/AI/html/cltl/cltl2.html
+ PROLOG: http://www.swi-prolog.org/
+Prolog Tutorials: http://www.swi-prolog.org/
+Logic, Programming and Prolog (2ed) by Ulf Nilsson and Jan Maluszynski
+online: http://www.ida.liu.se/~ulfni53/lpp/
+ Otto tool http://www.cs.unm.edu/~mccune/otter/
+Prover9 http://www.cs.unm.edu/~mccune/prover9/
+ Weka data mining tool http://www.cs.waikato.ac.nz/ml/weka/
+ AISpace http://www.aispace.org/index.shtml
+ Google Patterns http://www.clips.ua.ac.be/pages/pattern
+ Answer Set Programming (smodels & lparse, or gringo & clasp)
+http://www.tcs.hut.fi/Software/smodels/
+http://potassco.sourceforge.net/
+Suggested Course Materials
+See Required Materials
+Assignments & Academic Calendar
+(Topics, Reading Assignments, Due Dates, Exam Dates)
+Important Dates*
+Course Syllabus Page 2
+01/09 Monday First Day of Class
+01/16 Monday Martin Luther King Jr. - Holiday – NO CLASSES
+Monday Noon *
+4Assignments Due – check eLearning for details
+(1) 2/06 (2) 3/06 (3) 4/03 (4) 4/24
+(1) 2/17 Friday *
+(2) 3/24 Friday * Exam 1,2,3 (In TESTING CENTER and not in classroom)
+(3) 4/41 Friday *
+3/13-3/19 NO CLASSES (Spring Break)
+4/30 Saturday Last Day of class
+Final Examination (To be announced)
+5/01-5/06
+5/11 Grade Due
+* Note: The dates here are tentatively assigned and are subject to change as needed.
+60% for 3 Tests. 20% for each 2-hour test. Tentatively scheduled: Friday 11am–9pm on (1) 2/17, (2)
+3/24, (3) 4/21. Each test will be taken at Testing Center (Student Assessment Center, McDermott Library
+1st floor) for 2-hour examination. Time of Test will be announced later in elearning. Each student should
+make a seat reservation prior to each test. All exams are closed book and closed notes. Exams will focus
+more on concepts and less on details. Necessary documentation will be provided to avoid the need for
+memorization as much as possible. We will likely take all the tests in the testing center as scheduled. You
+can expect to see a few coding/analysis questions, a few short answer questions and a few multiple-choice
+questions in each test. Instructor is responsible for grading all the tests. Any make-up tests will be
+scheduled during the same week (usually Tuesdays prior to the actual test date) at the discretion of the
+instructor. There should be a valid reason for scheduling make-up tests & they need to be coordinated with
+the instructor, 1-2 weeks prior to the test date except for serious medical condition (with Doctor's or
+Hospital's certificate will be required as a valid proof.) It is unlikely that curving will be used to boost the
+final grades. If the instructor decides to do it, only the test scores will be boosted, but the tests' contribution
+will be clipped at 60%. In other words, curving will NOT make up for the points lost in all other
+assignments. So, it is extremely important to complete them in timely manner.
+20% for 4 Assignments, contributing 5% each. Due (Monday 12pm Noon): (1) 2/06, (2) 3/06, (3) 4/03,
+(4) 4/24. You can ask for clarifications and help in the weekly forum. If you need help with your code, it is
+ok to post 1 or 2 lines of code, but do not post your full program - email it to TA or professor instead. You
+are expected to start working on them as soon as they are posted. Do not expect us to rescue you on the day
+of submission. I encourage everyone to submit the projects 1 or 2 days early. You can upload it again but
+the last submission will be graded. [Do not wait until the last minute to submit it. I do understand things
+happen and occasionally as you may not be able to submit projects on time.] The Late Penalty policy is to
+assess 1% penalty for every 1 hours. For example, if you submit the projects exactly 1 day later, 24%
+penalty will be assessed. Late projects will be accepted up to 3 days and thereafter 0. You won't be able to
+submit it after 3 days and your project grade will be set to 0. My advice is to submit whatever you have
+done (your best effort) before/by the due, to seek for any further discretion and/or consideration. All
+these assignments/projects should be done in Linux and you will hand-in your projects directly in Linux.
+We will NOT use elearning to submit the projects, but your grades and TA's comments will be recorded
+there - you can click on My Grades to access them. More details on Assignment & Submission steps will
+be given with eLearning.
+Warning. To get A- or above (in letter grade), student should complete and submit all the assignments and
+get over 60% for each assignment. To get B- or above, student should complete and submit at least 75% of
+the assignments, and get over 40% or more for each assignment.
+20% for Weekly Activity & Quiz (including online quiz) will be posted by Monday & will be due
+Saturday midnight (11:59pm) every week. It will be a small programming exercise or tryout (e.g., to write
+and run a simple ""Hello world"" program, to try Linux commands or sample programs provided, to install a
+tool to try it) in most weeks. It can also be a quiz (online and open-book) or some other meaningful activity
+Course Syllabus Page 3
+as well. It will vary every week. Each weekly activity and its score may vary case by case. Late
+submissions are NOT accepted for weekly activities and quizzes. Note: Weekly quiz will provide a good
+snapshot, an excellent opportunity to review, and for a preparation for each test. Late submissions are NOT
+accepted for weekly activity or quiz. Weekly Postings. 2 meaningful and relevant posts are required every
+week in weekly discussion forums. This is extremely crucial component of a true online course. No non-
+sense and no trivial comment. One-liners saying ""Thanks!"" (""Weather is bad"" or ""I got it"" or ""I do not
+know"" or ""very good"" etc.) will not be counted as a valid posting or participation. Keep your posting very
+relevant and valuable to you and your classmates, and to the course work and activity of the week. Your
+post can be a good question, meaningful response to another student's question, interesting observation, etc.
+For a question, you should do your own homework for your question and share your findings. If you use an
+external source, you should provide a reference or a link of the source, and provide a good overview or
+summary in your wording. Do not post any offending or destructive content. Do not post any
+overwhelming contents (e.g., to copy and paste big image or images, or very long text content, or using
+""big"" fonts) but you should attach a file as you need. In simple words, each post should value to the course.
+Instructor (TA or Grader) will grade the weekly forum and determine the value of each post - instructor's
+decision is final. First post should be submitted latest by Wednesday midnight and 2nd post should be
+completed latest by Saturday midnight, otherwise respective posts won't receive any grade. It is possible for
+someone to be a silent observer in on-ground course and still manage to get the final grade of A. It is
+impossible to do it in online course. Reasonable progress towards the expected answer or learning will get
+1 point & perfect or near-perfect submissions will get 2 points. Late submissions are NOT accepted for
+weekly posts.
+The following Table is for Weekly Activity (See the detail for elearning).
+Spring 2017 Schedule/Plan*
+* Note: The dates and the topics are subject to change as needed.
+AI Russell& Norvig Other Topic Examination Assignment
+Week
+Chapter
+01 – 1/10 T AI ch1 Syllabus, Introduction
+02 – 1/17 T AI ch2 Lisp
+03 – 1/24 T AI ch3
+04 – 1/31 T AI ch4
+05 – 2/07 T AI ch5 (1) 2/06 M
+06 – 2/14 T AI ch6 Test1 2/17 F
+07 – 2/21 T AI ch7 Prolog
+08 – 2/28 T AI ch8
+09 – 3/07 T AI ch9 (2) 3/06 7M
+10 – 3/14 T AI ch10
+11 – 3/21 T AI ch11 Advanced Topics (as time permits) Test2 3/24 F
+12 – 3/28 T AI ch12 PHP, Javascript, Python, ASP
+13 – 4/04 T Advanced Topics (3) 4/03 M
+14 – 4/11 T Fall Break
+15 – 4/18 T Advanced Topics Test3 4/21 F
+16 – 4/25 T Last Week (4) 4/24 M
+17 5/01-5/06 Final Exam Week Grade Due 5/11 TBA
+Grading Policy
+(including percentages for assignments, grade scale, etc.)
+Course Syllabus Page 4
+Letter grades will be assigned as follows:
+97-100 A+ 93-96 A 90-92 A-
+87-89 B+ 83-86 B 80-82 B-
+77-79 C+ 73-76 C 70-72 C-
+67-69 D+ 63-66 D 60-62 D-
+Below 60 F
+Note: ""Running"" and weighted total in your gradebook shows the current weighted grade based on your
+graded work only based on what you have submitted. For example, if you have done only Test1,
+Assignment1, Weekly postings so far (but you have missed Test2 and missed Assignment2 totally), current
+total grade will be based on only those entries that you have submitted and done.
+A+ = 97 & above
+A = 93-96
+Weekly Activity, Quiz, Posting 20% A– = 90-92
+B+ = 87-89
+4 Assignments (5% x 4) 20% B = 83-86
+Grading Criteria
+B– = 80-82
+3 Tests (20 % x 3) 60% C+ = 77-79
+C = 73-76
+C– = 70-72
+F = below 70
+Make-up Exams Not allowed (or 20% penalty)
+Late submission or makeup is not allowed.
+Late Work (If imposed, there will be 20% reduction in grade per day [prorated] for any
+late submission of Assignment, and for maximum 3 days.)
+Class Attendance Required; Attendance will be taken
+Classroom Citizenship Respect for your classmates is necessary at all times
+All other policies Please visit http://go.utdallas.edu/syllabus-policies for other policies
+Course & Instructor Policies
+(make-up exams, extra credit, late work, special assignments, class attendance, classroom citizenship, etc.)
+Instructor is responsible for grading all the tests & weekly participation. TA will be responsible for grading
+projects and weekly assignments. So, contact the TA directly for any grading related discrepancies for
+programs. It is not possible to give a detailed feedback for each project/weekly assignment/test question
+due to large # of students in our classes. If you need more details/clarification, you are encouraged to meet
+the TA/instructor during office hours & get personal attention. Do not rely on email alone to get the full
+response. If you are stuck with your assignment, it is better to turn in what you have and send us email. We
+will revise your submission and give some guidance. Your next submission will override the previous
+submission - TA will always grade the latest submission for each project. You can use email to get help for
+weekly assignments. Include the detailed problem description & applicable error messages, zip all your
+source files and include it with your email too. Do not just say ""my program does not work"" and expect us
+to figure out everything - you need to help us to help you efficiently. We expect to complete grading
+assignments (projects), weekly activities or quizzes, and tests in a week or so. However, when the schedule
+gets too busy, it can be as long as 2 weeks before the grades are assigned. It is the students' responsibility to
+review the grade details when they become available and follow up for clarifications if needed.
+Course Syllabus Page 5
+Attendance. For in-class course (and elearning weekly activity & participation via elearning for online
+course), Attendance Rule & Policy: Please note that if you miss any lectures beyond the 1st week, then
+automatic actions kick in: (1) Missing the next lecture in the 2nd week will result in an automatic drop of
+one grade from your final course grade. (2) Missing the entire 2nd week of lecture(s) is an automatic F in
+the course. So if you are going to miss more than one week of classes (ideally, you should not miss any
+lecture, but sometimes people switch courses during the first week), then you should not be in the course
+and you should drop out. Further you should plan to be here for Final Examination Week, as it will be
+scheduled for this course.
+Off-campus Instruction and Course Activities
+Below is a description of any travel and/or risk-related activity associated with this course.
+Each student should plan to take 3 Tests at Testing Center, and demo for Assignments, or to arrange off-
+site proctoring service for Tests with Testing Center.
+Comet Creed
+This creed was voted on by the UT Dallas student body in 2014. It is a standard that Comets choose to live
+by and encourage others to do the same:
+“As a Comet, I pledge honesty, integrity, and service in all that I do.”
+UT Dallas Syllabus Policies and Procedures
+The information contained in the following link constitutes the University’s policies and
+procedures segment of the course syllabus.
+Please go to http://go.utdallas.edu/syllabus-policies for these policies.
+The descriptions and timelines contained in this syllabus are subject to change at the discretion
+of the Professor.
+Course Syllabus Page 6","[""Problem searching agents"", ""Informed search methods"", ""Uninformed search methods"", ""Game playing techniques"", ""Logical reasoning agents"", ""Knowledge representation"", ""Knowledge bases"", ""Theorem proving"", ""Uncertainty reasoning"", ""Probabilistic reasoning"", ""Natural language processing"", ""Computer vision"", ""Expert systems"", ""Planning algorithms"", ""Machine learning fundamentals"", ""Logic and deduction"", ""Answer set programming"", ""Prolog programming"", ""LISP programming"", ""Data mining techniques""]","{""objectives"": ""Students will understand and apply problem-solving agents, game-playing techniques, logical reasoning, knowledge bases, theorem proving, and probabilistic reasoning methods in artificial intelligence systems."", ""tools_used"": [""Common LISP"", ""Prolog"", ""AIMA online resource"", ""Weka data mining tool"", ""AISpace"", ""Otter/Prover9 theorem provers"", ""Answer Set Programming (smodels, gringo, clasp)"", ""Google Patterns library""], ""prerequisites"": ""CS 5343"", ""weekly_topics"": []}",47.5,parsed,2026-04-07 01:43:59.726732,2026-04-07 17:12:17.729336
+bcf3ddaf-d16e-4c55-abc2-e7de77af23f2,1461cfa0-b5f2-405e-8202-c707215ffd5f,IMS,,,"Organizations, Strategy & Intl Mgmt",/app/uploads/0b27908f-ad38-4329-97b0-79756b5978cd.pdf,"Course Syllabus
+International Management Studies (IMS) 6304
+cross-listed as Entrepreneurship (ENTP) 6304
+INTERNATIONAL BUSINESS MANAGEMENT
+Course Information
+Course Number/Section (Merged) ENTP 6304.OW1. IMS 6304.OW1-22
+Course Title International Business Management
+Term Spring 2022
+Professor Contact Information
+Professor Habte G. Woldu
+Office Phone (O) 972-883-6357
+Email Address wolduh@utdallas.edu
+Office Location JSOM 4.805
+Class time & Room M, W. 1:00-2:15 pm, JSOM 2.112
+Office Hours M, W. 11:00 am – 12:00 pm CT (MS Teams)
+Other Information Professor Habte Woldu’s Profile Page
+Teaching Assistant Contact Information
+TA Ethan Alborz
+Phone Available on MS Teams
+Email Address Ethan.Alborz@UTDallas.edu
+Office Hour (T & Th) 4:00-5:30 pm
+Classroom Safety and COVID-19:
+To help preserve the University’s in-person learning environment, UT Dallas recommends the
+following:
+Students are expected to adhere to the University’s CDC Updated Guidelines issued on July 30,
+2021. All Comets are strongly encouraged to wear face coverings indoors regardless of
+vaccination status.
+Accommodations for Students Who Must Isolate or Quarantine Due to
+COVID-19
+To keep the UT Dallas community as safe as possible, the University requires
+students who test positive for COVID-19 or who are close contacts as
+determined by the campus contact tracing program to isolate or quarantine as
+applicable. Faculty will be notified by the Dean of Students' Office if a student in
+their class has been required to isolate (positive case) or quarantine (exposed).
+Pre-recorded lectures will be available for students during the period the students
+must isolate or quarantine. Faculty will follow and apply an attendance policy for
+in-person meetings, but the absences due to COVID-19 cannot be counted
+against an isolated or quarantined student.
+IMS 6304-501-SP22- Course Syllabus Page 1
+Verifying COVID-19 Isolations or Quarantines
+Students need to self-report COVID-19 positive results or exposures via an
+online form so that university campus tracers can verify, record, and take
+necessary campus precautions. When the professor is notified by students
+rather than by the Dean of Students' Office that the students are isolating or
+quarantining, the faculty should remind students to self-report via the form;
+students should not attend class until cleared by campus tracers.
+Vaccinations are widely available, free and not billed to health insurance. The vaccine will help
+protect against the transmission of the virus to others and reduce serious symptoms in those who
+are vaccinated. You are encouraged to get a COVID-19 vaccine and register your vaccination
+status through the voluntary vaccine report form. If you have received your COVID-19 booster,
+you may register your status through the voluntary COVID-` booster reporting form.
+Proactive Community Testing remains an important part of the university’s efforts to protect our
+community. Tests are fast and free. Please check the Comets United webpage for additional
+information.
+Student Safety remains an important part of the UT Dallas’ efforts to protect our community. All
+students will adhere to the Comet Commitment. Unvaccinated Comets will be expected to
+complete the mandatory Required Daily Health Screening. Those students who do not comply
+will be referred to the Office of Community Standards and Conduct for disciplinary action under
+the Student Code of Conduct – UTSP5003. All students are encouraged to read the
+Recommendations for Students Returning to Campus issued on August 2, 2021.
+Visit Comets United webpage to obtain the latest information on the University’s guidance and
+resources for campus health and safety.
+Previous Campus Communications: a list of university announcements made in
+2020-2022.
+Registrar's Intranet: please log in with your UTD NetID and password to access
+this site. Information that faculty need about grading, scheduling, and other
+essential aspects of our responsibilities related to teaching are made available and
+updated regularly in the Registrar's Intranet. This source of information can only
+be accessed by logging in with your UTD NetID and password.
+FERPA Guidelines: you will be asked to log in before you access the FERPA Guidelines
+webpage on the Registrar's Intranet. Please contact the Office of the Registrar
+at records@utdallas.edu for the proper student consent forms and further instructions.
+Honorlock: Online proctoring tool will be available for fully online courses and for
+classes with enrolled international students who are not yet in the United States.
+UT System Resources for Creating Accessible Course Content: designed to assist
+faculty with developing course content
+IMS 6304-501-SP22- Course Syllabus Page 2
+Student Resources
+Students who have tested positive for COVID-19 or may have been exposed
+should not attend class in person and should instead follow required disclosure
+notifications as posted on the university’s website (see ""Student Safety"" protocols).
+COVID-19 Resources
+Comets United webpage: check frequently
+FAQ: check out the FAQs and reach out to your instructor or academic advisor if
+answers are not included
+Student Resources: a variety of resources are available to help students to obtain
+counseling, health care, and academic support.
+________________________________________________________________
+Course Information
+Personal information will not be transmitted to the professor as well as to the TA
+via email and all correspondence related to academic activities will be conducted
+through official UTD mode of communication.
+Course Pre-requisites, Co-requisites, and/or Other Restrictions
+The course is designed for graduate students who had already taken any international business or
+international marketing management course.
+Course Description
+Focusing on the art and science of international management, the course, using analytical tools and
+data analysis, surveys the evolving global business environments and evaluates international
+business operations in various markets of the world. It examines various theories behind
+international trade and direct investment practices, and fosters evidence-based critical thinking
+skills. The course also utilizes various case studies to help students learn the necessary scientific,
+technological, and managerial techniques to manage the challenges and opportunities that
+businesses face in diverse global markets. The global challenges, students will be exposed to
+include, environmental factors, child labor, human resource management, the north-south dialogue
+on international trade dispute between multinational firms and developing countries on
+employment policy, subsidy, tariffs, transfer pricing and technology sharing.
+Student Learning Objectives/Outcomes
+Students upon finishing the course are expected to manage the following core issues:
+1. Analysis of the international trade dynamics and its trend and direction in the global
+marketplace
+2. Understanding the comparative advantage of trade between nations according to the theory
+of Ricardo and recognizing its limitations.
+3. Understanding the impact of trade barriers on the welfare of a nation and how it affects the
+world economy
+IMS 6304-501-SP22- Course Syllabus Page 3
+4. Recognizing the association global business expansion and the increase in income gap
+between the rich and poor
+5. Identifying ethical issues and responsibilities of multinational firms: transfer pricing
+strategy, child labor practice controversies, environmental pollution and corruption
+6. Recognize the determinants of currency exchange rate
+7. Determine the sources of human resource for expatriate assignments and recognize how
+each potential source is aligned with the strategy of international firms.
+Required Textbooks and Materials
+Required Texts
+Carbaugh, Robert, International Economics, 17th Regular or Special Editions, South-
+Western, 2019
+Suggested Course Materials
+Suggested Readings/Texts
+• Polman, Paul and Winston, Andrew, Net Positive: How Courageous Companies
+Thrive by Giving More than They Take, Harvard Business Review Press, 2021
+• Zakaria, Fareed, Ten Lessons for a Post-Pandemic World, W.W. Norton &
+Company, 2020
+• Vance M. Vance and Yongsun Paik, Managing a Global Workforce: Challenges and
+Opportunities in International Human Resource Management, 3rd edition, Routledge
+Taylor & Francis Group, 2015
+• Guillen, Mauro and Garcia-Canal, Esteban, Emerging Markets Rule: Growth
+Strategisof the New Global Giants, McGraw Hill, New York, 2015
+• Friedman, Thomas, The World is Flat: A Brief History of the Twenty-First Century,
+Farrar, Straus and Giroux, 2005
+• Yergin, D. and Stanislaw, J., Commanding Heights: The Battle for the World
+Economy, PBS Series, 2002
+• The Economist, The international business section of The New York Times and
+Journal of International Business Studies (current global economic related issues)
+• McKinsey & Company, publishing@email.mckinsey.com (you can access it freely
+by filling an online form. Useful for reporting current issues such as the impact of
+Covid-19 on the global economy, economic sectors, and other macro-economic
+issues).
+Suggested Materials
+Textbooks and some other bookstore materials can be ordered online or purchased at the UT Dallas
+Bookstore.
+Technical Requirements
+In addition to a confident level of computer and Internet literacy, certain minimum technical
+requirements must be met to enable a successful learning experience. Please review the important
+technical requirements on the Getting Started with eLearning webpage.
+Course Access and Navigation
+This course can be accessed using your UT Dallas NetID account on the eLearning website.
+Please see the course access and navigation section of the Getting Started with eLearning webpage
+for more information.
+IMS 6304-501-SP22- Course Syllabus Page 4
+To become familiar with the eLearning tool, please see the Student eLearning Tutorials webpage.
+UT Dallas provides eLearning technical support 24 hours a day, 7 days a week. The eLearning
+Support Center includes a toll-free telephone number for immediate assistance (1-866-588-3192),
+email request service, and an online chat service.
+Communication
+This course, also utilizes online tools for various interaction and communication. Some external
+communication tools such as regular email and a web conferencing tool may also be used during
+the semester. For more details, please visit the Student eLearning Tutorials webpage for video
+demonstrations on eLearning tools.
+Expectations:
+Students are expected to participate in all activities as required in the syllabus. Assignments, tests,
+discussion and group presentations should be conducted within the given deadlines. Failure to
+comply with the requirements may lead to scholastic difficulties. All, allowable make-ups are
+subject to 20% deduction of the provided maximum grades.
+IMS 6304-501-SP22- Course Syllabus Page 5
+Academic Calendar
+Legend:
+(All Timings mentioned are as per Central Time Zone only)
+Project
+Group Discussion
+General Discussion
+WEEK/ TOPIC/ ASSESSMENT /
+READING DUE DATE
+DATES LECTURE ACTIVITY
+Introduction Group Signup Sign up to a group by
+Jan 20 Lecture 01 An overview of the Jan 27
+World Economy- Personal statement:
+Class Self-introduction (on Post a self-
+Survey
+Meeting: Discussion Board) introduction by Jan 27
+Via
+Reading
+Microsoft
+Carbaugh
+Teams
+Chapter 1:
+An overview of the
+international
+economy and
+globalization
+Week 2 Lecture 02 Chapter 2: Discussion 0 Online Discussion 0
+Jan 27 Foundation of The Coronavirus effect on by all students, Jan
+modern trade theory global economic 30
+Class and comparative sentiment.
+Meeting: advantage
+Via
+Microsoft
+T eams
+Week 3 Lecture 03 Chapter 3: Project 1 by Group 8: Project 1 Paper
+Feb 03 Sources of Does a “Flat World” Report: due date:
+comparative make Ricardo wrong? Feb 03
+Class advantage (see e-learning)
+Meeting:
+Via Discussion 1 Discussion 1 by
+Microsoft Outsourcing: group 1, Feb 03
+T eams
+Opportunities, Myths
+and Realities.
+IMS 6304-501-SP22- Course Syllabus Page 6
+WEEK/ TOPIC/ ASSESSMENT /
+READING DUE DATE
+DATES LECTURE ACTIVITY
+Week 4 Lecture 04 Chapter 4: Project 2 by Group 7: Project 2 Paper
+Feb 10 Tariffs and their Is the United States Report due date: Feb
+effects on the welfare Losing its Innovation 10
+of nations Edge.
+Discussion 2: Will Discussion 2 by Group
+emerging economies soon 2, Feb 10
+outstrip the rich ones?
+Week 5 Ch. 4 cont. Project 3 by Group 6: Project 3 Paper
+Feb 17 In Class Discussion: Blue Orchard Finance: Report:
+Analysis & Connecting Due date: Feb 17
+demonstration of the Microfinance to Capital
+impact of tariff on the Markets
+welfare of a small
+nation (using graphs
+& computation
+methods).
+Week 6 Lecture 06 Chapter 6: Discussion 3: “After A Discussion 3 by Group
+Feb 24 Trade regulations Brief Silence, Sceptics of 3, Feb 24
+and industrial China's Belt and Road
+policies Initiative Are
+Speaking Up Again”
+Week 7 Midterm On e-learning
+March 03 Chapters 1-4 March 03, 7-9:45 pm
+Week 8 Lecture 07 Chapter 7: Trade Discussion 4: Are Discussion 4 by Group
+March 10 Policies in International Labor 4, March 10
+Developing Standards Needed to
+Countries
+Prevent Social Dumping?
+Week 9 Spring
+March 14 - Break
+March 20 (No Class)
+IMS 6304-501-SP22- Course Syllabus Page 7
+WEEK/ TOPIC/ ASSESSMENT /
+READING DUE DATE
+DATES LECTURE ACTIVITY
+Week 10 Lecture 08 Chapter 8: Regional Project 4 by Group 5: Project 4 Paper
+March 24 trading Vietnam’s Private Sector Report:
+arrangements Vs Development: Mr. Nam’s Due date: March 24
+multilateralism Dilemma
+Discussion 6: Africa’s Discussion 6 by Group
+emerging economies to 6, March 24
+take the lead in consumer
+market growth
+Week 11 Lecture 09 Chapter 9: Project 6 by Group 3: Project 6 Paper
+March 31 International factor Play it safe at home or Report
+movements and take a risk abroad. Due date: Mar 31
+multinational
+enterprise Homework Homework submission
+by Mar 31
+Week 12 Lecture 10 Chapter 10: Project 5 by Group 4: Project 5 Paper
+April 07 The Balance of Cracking the Next Growth Report
+Payments Market: Africa Due date: April 07
+Discussion 5: The BRICs Discussion 5 by Group
+(Brazil, Russia, India and 5, April 07
+China): The Trillion-
+dollar club
+Week 13 Project 7 by Group 2: Project 7 Paper
+April 14 Brexit: Breaking Away- Report
+Would it pay? Due Date: April 14
+Discussion 7 by Group
+Discussion 7: Free
+7, April 14
+Trade Agreement to
+Bolster Mexico’s
+Competitiveness?
+IMS 6304-501-SP22- Course Syllabus Page 8
+WEEK/ TOPIC/ ASSESSMENT /
+READING DUE DATE
+DATES LECTURE ACTIVITY
+Week 14 Lecture 12 Chapter 12: Project 8 by Group 1: Project 8 Paper
+April 21 Exchange Rate Does Foreign Direct Report
+Determination Investment Hinder or Due date: April 21
+Help Economic
+Development?
+Discussion 8: Do US Discussion 8 by Group
+Multinationals exploit 8, April 21
+foreign workers?
+Week 15 Lecture 13 Chapter 13: Discussion by all Watch video clip before
+April 28 International students, based on the class, Thomas
+Human Resource video clip from the Friedman, “The World
+Management and author, Thomas is Flat”-MIT
+MNC Strategy Friedman of “The World https://www.youtube.c
+is Flat”
+om/watch?v=53vLQnu
+V9FY
+Week 16 Final Exam* May 5
+May 5 Chapters 6-
+10, 12 and 13
+*The Midterm and Final Exams are for 2 hours respectively and it is recommended that
+students plan their exam time appropriately. Students need to avoid starting their exam
+session in the last hour of the exam session.
+Grading Policy
+Weights
+Item Percentage
+Homework 5%
+General Discussion 5%
+Individual participation in discussion 10 %
+Group project (including peer evaluation): report 20 %
+Mid-Term exam includes chapters 1-4 25 %
+IMS 6304-501-SP22- Course Syllabus Page 9
+Final exam includes chapters 6 -10, 12 and 13 35%
+Total 100%
+Grading criteria (The grading criteria are subject to change. The final grade will depend
+on the overall class and individual performance)
+Scaled Score Letter Equivalent
+>=94 A
+90-93 A-
+86-89 B+
+82-85 B
+79-81 B-
+75-78 C+
+70-74 C
+Less than 70 F
+Accessing Grades
+Students can check their grades by clicking “My Grades” under Course Tools after the grade for
+each assessment task is released
+Participation in the discussion topics (mini-cases)
+Students are expected to provide comments and solutions to the posted questions and problems
+spelled out in the provided discussion profile available on the course site. As the cases reflect the
+contents and the objectives of the chapters under which they are listed, you need to read the
+chapters thoroughly and Google for related issues published in academic journals in order to
+effectively participate in the discussion.
+Participation grade will be based on your level of involvement. It is important to remember that
+the level of involvement will be evaluated by quality, not quantity of postings. Your mini-case
+discussions should bear substance, be relevant and have depth.
+Due to the large size of the class, weekly discussion topics are distributed to specific groups (see
+course calendar table). The assigned group members will participate in the discussion as
+facilitators and discussants. However, the group should encourage and engage students from
+other groups.
+Homework Assignment
+There is one individual assignment: It is worth 5 points of your total course grade. You will provide
+responses to questions on the assigned topics. The homework will be released under course
+Assignment’s page.
+Group Project
+Project Report Format: you can earn up to a maximum of 15% for your paper and project
+presentation and 5% for group peer evaluation.
+IMS 6304-501-SP22- Course Syllabus Page 10
+Each student will be given a grade based on the outcome of group project and his/her level of
+participation within a group. The group project report will consist of 5 pages, double-spaced and
+typed essay. The report also should include a separate page for title of the group project, full names
+of group members. (ONLY the names of EFFECTIVE participants should be included) and a
+separate page for references used as sources in the report; at least five references excluding your
+book are required. The references listed on your pages should be cited in text. The citation format
+is preferred to be in MLA. References should be from reputable journals or textbooks. We highly
+recommend that you use UT Dallas Library for sources to support your group project papers, mini-
+case discussion as well as take-home essays.
+Peer Evaluation
+Peer evaluation report should be submitted under the assignment link on the group case submission
+before or by the due date. Peer evaluation is based on individuals’ performance. Peer evaluation
+should have both numerical and comments based on the following criteria.
+a) intellectual contribution
+b) full participation and integrity
+c) creative and original ideas submitted to the group
+d) following deadlines for assigned tasks
+e) resourcefulness
+Case profiles for group project are provided on the course site. Groups will be selected for case
+studies and report during the first week of the course. Based on the evaluation information,
+instructor will assign a group participation grade for each student.
+The group project report should include
+a) Problem definition/theme of the case/article
+b) Use of relevant literature by following formal citations.
+c) Method/s applied to discuss and solve the problems indicated in the paper/case (empirical,
+qualitative (literature-based analysis) or a combination of both
+d) Successful discussion on all alternative solutions
+e) Conclusion, including the discussion on the best solution to the problem
+f) Challenges encountered and recommendations for future studies.
+Groups will be assigned projects at the beginning of the class and students will be notified under
+their respective assigned gorups. Each group member can use the available group tools under its
+own group area in the course to communicate and collaborate within the group.
+Assignment submission instructions
+You will submit your homework, group project and peer evaluation (in the required file format
+with a simple file name and a file extension) by using the Assignments tool on the course site.
+Please see the Assignments link on the course menu or see the icon on the designated page. You
+can click each assignment name link and follow the on-screen instructions to upload and submit
+your file(s). For additional information on how to submit assignments, view the Submitting An
+Assignment video tutorial.
+Please note: each assignment link will be deactivated after the assignment due time expires. After
+your submission is graded, you may go to My Grades on the course menu and click the score link
+to check the results and feedback provided by the professor. ONLY one group member, will submit
+the assignment on behalf of the group and all group members will be able to view the results and
+feedback once it’s been graded.
+IMS 6304-501-SP22- Course Syllabus Page 11
+(Midterm and Final) Exams
+Students will be evaluated on two timed exams. The questions for the exams will be drawn mostly
+from Carbaugh’s textbook as well as professor’s lecture notes. Mid-term and Final exam will
+include both multiple-choice and essay questions. In order to obtain full grade, the essays need to
+be analytical in nature and supported by sources from referred (peer reviewed) journals or books
+(two sources per essay). Sample essay questions are posted on the module page. A sample test will
+be also available for you to practice and get familiar with the testing system.
+The exams will be available on the days indicated on the Schedule and instructions will be given
+indicating the total time allowed for completion once the exam is opened. The instructor can
+change the system of examination and re-evaluate the entire class if the honor system procedures
+do not function as expected.
+The exams will be available under Quizzes and Exams link on the course menu. You can access
+them by clicking the link and then clicking the available exam title links. Each exam is timed and
+can only be accessed one time within the scheduled time window. Please read the on-screen
+instructions carefully before clicking “Begin”. After each exam is graded and released, you may
+go to My Grades page and click the score link of the quiz to view your graded submission.
+Class Materials
+The instructor may provide class materials that will be made available to all students registered
+for this class as they are intended to supplement the classroom experience. These materials may
+be downloaded during the course; however, these materials are for registered students' use only.
+Classroom materials may not be reproduced or shared with those not in class, or uploaded to
+other class environments except to implement an approved Office of Student AccessAbility
+accommodation. Failure to comply with these University requirements is a violation of the
+Student Code of Conduct.
+Class Participation
+Regular class participation is expected. Students who fail to participate in class regularly are
+inviting scholastic difficulty. A portion of the grade for this course is directly tied to your
+participation in this class. It also includes engaging in group or other activities during class that
+solicit your feedback on homework assignments, readings, or materials covered in the lectures
+(and/or labs). Class participation is documented by faculty. Successful participation is defined as
+consistently adhering to university requirements, as presented in this syllabus. Failure to comply
+with these University requirements is a violation of the Student Code of Conduct.
+Class Recordings
+Students are expected to follow appropriate University policies and maintain the security of
+passwords used to access recorded lectures. Unless the Office of Student AccessAbility has
+approved the student to record the instruction, students are expressly prohibited from recording
+any part of this course. Recordings may not be published, reproduced, or shared with those not in
+the class, or uploaded to other online environments except to implement an approved Office of
+IMS 6304-501-SP22- Course Syllabus Page 12
+Student AccessAbility accommodation. Failure to comply with these University requirements is a
+violation of the Student Code of Conduct.
+Course Policies
+Make-up exams
+Make-ups for assignments, midterm and final exams are possible only under extraordinary
+situation and the instructor may not give full credit to late exams depending on the condition and
+reasons why the examinee was not able to take the exam. All justified makeups will be subject to
+20% deduction.
+Extra Credit
+No
+Late Work
+Only accepted under extraordinary situation and subject to 20% deduction
+Special Assignments
+Yes, but only with the recommendation of Office of Student AccessAbility accommodation
+Classroom Citizenship
+Please use proper etiquette when interacting with class members and the professor.
+Comet Creed
+This creed was voted on by the UT Dallas student body in 2014. It is a standard that Comets choose
+to live by and encourage others to do the same:
+“As a Comet, I pledge honesty, integrity, and service in all that I do.”
+Academic Support Resources
+The information contained in the following link lists the University’s academic support resources
+for all students.
+Please go to Academic Support Resources webpage for these policies.
+UT Dallas Syllabus Policies and Procedures
+The information contained in the following link constitutes the University’s policies and procedures
+segment of the course syllabus.
+Please go to UT Dallas Syllabus Policies webpage for these policies.
+The descriptions and timelines contained in this syllabus are subject to change at the discretion
+of the Professor.
+IMS 6304-501-SP22- Course Syllabus Page 13","[""International Business Operations"", ""Global Business Environments"", ""International Management"", ""Cross-Cultural Management"", ""Global Strategy"", ""International Market Entry"", ""Comparative Business Systems"", ""Global Organizational Design"", ""International Human Resource Management"", ""Emerging Market Dynamics"", ""International Negotiation"", ""Global Supply Chain Management"", ""Cultural Differences in Business"", ""International Competitive Analysis"", ""Multinational Corporation Management"", ""Global Risk Assessment"", ""International Business Ethics"", ""Market Analysis Tools"", ""Data-Driven Decision Making"", ""Global Business Innovation""]","{""objectives"": ""To develop understanding of international management principles and practices using analytical tools and data analysis to evaluate global business environments and international business operations."", ""tools_used"": [""Analytical tools"", ""Data analysis""], ""prerequisites"": ""Graduate standing; prior coursework in international business or international marketing management required"", ""weekly_topics"": []}",60,parsed,2026-04-07 01:23:07.923873,2026-04-07 17:12:19.438765
+d428a7b9-d12c-4f7a-b998-f71e3b68458e,1461cfa0-b5f2-405e-8202-c707215ffd5f,Business_Finance_FIN,,,Finance,/app/uploads/7bf5a20a-86c9-474d-828e-f1694e0a4bb1.pdf,"Course Syllabus
+Course Information
+FIN 3320: Business Finance
+Spring 2017
+Section 004 MW: 2:30-3:45 pm JSOM 2.112
+Professor Contact Information
+Professor Revansiddha B. Khanapure Office: JSOM 14.218
+Phone: 972-883-5874 Email: e-Learning
+Office Hours: Tue 1:00 – 2:00 pm Course Web: e-Learning and Connect
+or by appointment
+Course Pre-requisites, Co-requisites, and/or Other Restrictions
+Prerequisites: MATH 1326, MATH 2333 (or OPRE 3333), ACCT 2301, ACCT 2302, &
+MIS 3300. Co-requisite: (STAT 3360 or OPRE 3360).
+Course Description
+This course is an introductory course in corporate finance. It serves as the basis for all other
+courses in the area of finance as well as providing those basic tools that every business student
+will need to succeed in her/his chosen career. Students majoring in business administration and
+accounting, as well as those later pursuing more advanced finance studies, will find the material
+of this course an essential part of their business education. Regardless of the student's chosen
+career, the tools and techniques introduced in this course will also provide the foundation for
+them to make personal financial decisions.
+Student Learning Objectives/Outcomes
+After you successfully complete the course, you should be able to:
+1. apply time value of money concepts to various valuation problems.
+2. describe what drives a firm’s cost of capital and how to estimate it.
+3. analyze strategic investments in real and financial assets using various methodologies.
+Required Textbooks and Materials
+Fundamentals of Corporate Finance, 11th edition, by Ross, Westerfield and Jordan, McGraw-
+Hill Irwin, 2016, with Connect Plus access code that is required. Connect is an online software
+that allows students to submit homework assignments and check their work online. Access to
+McGraw-Hill Connect is required for this course. Connect Plus is the Connect Finance code plus
+an e-version of the textbook.
+Course Syllabus Page 1
+Web address of McGraw-Hill Connect for this course:
+http://connect.mheducation.com/class/spring_2017_khanapure_fin3320
+Help with registration for McGraw-Hill Connect website: http://bit.ly/StudentRegistration
+You must register with your UTD email address.
+Calculator
+For the exams for this course, you are allowed to use any calculator that you prefer except for (i)
+calculators that reside on smart phones or (ii) any calculator that has wireless access to the
+internet. Also, if you use a programmable calculator (e.g., TI‐83 Plus or TI‐84), you are not
+allowed to use the programming features of your calculator. An exam proctor will check your
+calculator before (or during) each exam to be sure that it complies with this rule; if the calculator
+is not in compliance, the proctor has the authority to remove your calculator for further use on that
+exam. Please do not risk having to incur the consequences. If you plan to use an unfamiliar,
+obscure type of calculator, you should check with your instructor any time before the actual exam
+date to avoid any potential complications during the actual exam. The time‐value‐of‐money
+material in this course will be taught to you in two ways: (1) using five fundamental math
+equations and (2) using financial‐function keys on a calculator. If you master either approach, you
+are perfectly well‐equipped to be successful in this course; mastering both approaches makes you
+even more competent.
+Suggested Course Materials
+It is strongly recommended that you read the Wall Street Journal and major finance websites
+(e.g., Yahoo! Finance, CNBC) on a regular basis.
+Assignments & Academic Calendar
+Date Lecture Topic and Reading Assignments
+Jan 9, 11 1 Introduction
+Readings: Chapters 2, 3
+Jan 16, 18 2 Financial Ratios and Time Value of
+Money
+Readings: Chapters 3, 5
+Jan 7, 12 3 Discounted Cash Flow
+Readings: Chapter 6
+Jan 23, 25 3 Discounted Cash Flow, NPV Analysis
+Readings: Chapters 6, 9
+Jan 30, Feb 1 4 NPV and Other Investment Criteria
+Readings: Chapter 9
+Feb 6, Feb 8 4 NPV and Other Investment Criteria
+Review
+Readings: Chapter 9
+Course Syllabus Page 2
+Feb 13, 15 5 Capital Investment Decisions
+Readings:Chapter10
+Feb 22 Exam 1
+Feb 27, 6 Project Analysis
+March 1 Readings: Chapter 11
+March 6, 8 7 Bond Valuation
+Reading: Chapter 7
+March 13, 15 8 Stock Valuation
+Readings: Chapter 8
+March 20, 22 8 Stock Valuation, Review
+March 27, 29 9 Risk and Return, Market Efficiency
+Readings:Chapters12,13
+April 3 10 Cost of Capital Readings: Chapters
+14
+April 5 Exam 2
+April 10, 12 11 Cost of Capital
+Readings: Chapter 14
+Apr 17, 19 12 Cost of Capital Readings: Chapter 14
+AND Review for the Final
+May 2-8 Common Final Exam Time: final exam week
+Location: testing center
+Grading Policy
+Problem Sets 15%
+Midterm 1/Exam 1 25%
+Midterm 2/Exam 2 25%
+Comprehensive Final Exam 35%
+ All exams are mandatory. All students must take both of the two midterms and the final
+exam to receive a grade for the course. Please refer to the sections titled “Exams” and
+“Make-Up Exam” for more details.
+Course Syllabus Page 3
+ No extra credit or assignment to improve the grade. All students will be
+evaluated based upon their performance on the same assignments and exams.
+ Your final course grade will be curved. The estimated distribution of the final grade is
+as follows: 20%-25% A and A-, 30% B, the rest the class will be in the range of C, D
+and F. These are broad estimates. The actual final grading scheme can substantially
+deviate from this scheme.
+Homework
+Homework sets are assigned on the McGraw-Hill Connect system. Although you are
+encouraged to discuss with your fellow classmates, keep in mind that you will have difficulty
+with exams if you are not able to solve the homework questions on your own. Copying or
+plagiarizing the work of another student will lead to zero credit and other punishments for
+academic dishonesty.
+ Please make sure to submit your work on time as you will not be able to access
+homework past the due date in the Connect system and no late homework will
+be accepted.
+ The total score across all the homeworks will exclude two homeworks with the
+lowest scores.
+ If you, for any reasons, have to miss a homework assignment, please make sure that you
+at least submit one or two quick attempts to gain access to the homework solution.
+Exams
+The exams will contain both conceptual questions and analytical problems. The questions and
+problems will be multiple-choices. The exams will be closed book and will take place in class
+on the dates indicated in the course schedule above. You will have to bring pencil, eraser,
+financial calculator (see the policy on calculator), and Scantron form 882-E.
+A common final exam will be given for all students across all sections of this FIN 3320 course
+during the final exam week. The FIN 3320 common final exam will be taken online and
+administered at UTD’s testing center. Students are required to reserve a seat at the UTD testing
+center in order to take the final - no walk ins will be allowed. A block of times during finals
+week will be available for exam seat reservations. When students register for FIN 3320 they
+will automatically be enrolled in a special section from which the Common Final will be
+administered. This section will appear on their eLearning dashboards.
+You cannot make up the common final exam if you miss it (except as described in the following
+paragraph). At this comprehensive final exam, you will not be allowed to bring backpacks,
+bags, books, cell phones, laptops, notebooks, or scratch paper. You will have to bring a pencil,
+an eraser, an acceptable financial calculator, and a photo ID (e.g., UTD Comet Card
+(preferred), state driver’s license, or passport).
+Students will not be able to take the exam without a photo ID. If a student is to miss an exam in
+the event of a medical emergency, a car accident, or a religious holy day, the student must notify
+his/her instructor by e-mail or telephone before the final exam begins. Last-minute emergencies
+Course Syllabus Page 4
+such as hospitalization, car wrecks on the way to the exam, etc., will have to be substantiated by
+supporting documents and in these cases the students will receive an incomplete grade (an “I”) in
+the course and will take the exam in a common-hour sitting early in the following semester.
+There will be no exceptions.
+Course & Instructor Policies
+Attendance
+ Regular class attendance is expected. The pace of the course will be fast, so it's
+important to keep up with the materials. You are responsible for any information missed
+(e.g., change of course schedule, homework due date, etc.) due to your absence from
+class. If a class is missed, you are responsible for obtaining notes from e-Learning or
+your fellow classmates to determine what has been missed. I will not respond to requests
+to go through important things that are missed due to your absence from class.
+ After going over the notes and reading the textbook, please feel free to talk to me or
+the TA if you have difficulty with any topic. I encourage you to seek help early on so
+that you won’t accumulate too many problems and have difficulty catching up.
+Classroom Conduct
+Please do not chat with your neighbors on things unrelated to the lecture or leave the classroom in
+the middle of the class because these behaviors distract me and other students. You may not use
+your cell phones or other electronic communication devices during the class. Laptop use should be
+limited to course related activities and only upon explicit permission from me.
+Make-Up Exam
+All assignments and exams are mandatory. It’s your own responsibility to arrange your schedule
+through out the semester to coordinate with the course schedule before you register for this
+course. No make-up exam or alternative test date will be given. If you miss a midterm exam
+for a legitimate reason that can be properly documented, you may discuss with me the
+possibility of distributing the weight of that midterm to the remaining midterm exam. I reserve
+the right to determine whether this redistribution of weight is permitted.
+Re-grading Policy
+Re-grading requests must be submitted in writing providing clear and specific description of the
+disagreement, within THREE calendar days from the time the exam/assignment is returned in
+class. I will re-grade the entire exam/assignment upon receiving your written re-grading
+request to ensure that both favorable and unfavorable grading errors are corrected.
+Method of Communication
+Email is the preferred the method of communication with me. I usually check emails pretty
+frequently even after business hours. Please email me from your eLearning account so that your
+emails won’t accidentally be filtered as junk mails.
+UT Dallas Syllabus Policies and Procedures
+Course Syllabus Page 5
+The information contained in the following link constitutes the University’s policies and
+procedures segment of the course syllabus.
+Please go to http://go.utdallas.edu/syllabus-policies for these policies.
+These descriptions and timelines are subject to change at the discretion of the Professor.
+Course Syllabus Page 6","[""Time Value of Money"", ""Financial Ratios Analysis"", ""Discounted Cash Flow Valuation"", ""Net Present Value (NPV)"", ""Investment Criteria and Decision Rules"", ""Capital Investment Decisions"", ""Bond Valuation"", ""Stock Valuation"", ""Risk and Return Analysis"", ""Market Efficiency"", ""Cost of Capital"", ""Weighted Average Cost of Capital (WACC)"", ""Corporate Finance Fundamentals"", ""Cash Flow Analysis"", ""Financial Decision Making"", ""Real Asset Investment"", ""Financial Asset Investment"", ""Firm Valuation Methods"", ""Personal Financial Decisions""]","{""objectives"": ""Apply time value of money concepts to valuation; understand drivers of cost of capital and estimation methods; analyze strategic investments in real and financial assets using various methodologies."", ""tools_used"": [""Financial calculators with time-value-of-money functions"", ""McGraw-Hill Connect online platform"", ""Five fundamental mathematical equations for TVM"", ""Financial function calculator keys""], ""prerequisites"": ""MATH 1326, MATH 2333 (or OPRE 3333), ACCT 2301, ACCT 2302, MIS 3300; Co-requisite: STAT 3360 or OPRE 3360"", ""weekly_topics"": [""Introduction to Corporate Finance"", ""Financial Ratios and Time Value of Money"", ""Discounted Cash Flow and NPV Analysis"", ""NPV and Other Investment Criteria"", ""Capital Investment Decisions"", ""Project Analysis"", ""Bond Valuation"", ""Stock Valuation"", ""Risk and Return, Market Efficiency"", ""Cost of Capital""]}",60.526315789473685,parsed,2026-04-07 01:25:28.560397,2026-04-07 17:12:14.833111
+9ff9a901-0a26-463c-af6b-4139fe944410,1461cfa0-b5f2-405e-8202-c707215ffd5f,CE_Embedded,,,Electrical & Computer Engineering,/app/uploads/71fb7f7e-14fd-4f42-908c-bf5d032338a9.pdf,"Course Information
+Course title: EE/CE 4370 Embedded Systems
+Term: Fall 2025
+Time & Venue:
+Lectures Mondays & Wednesdays 8:30AM - 9:45AM JSOM 12.202
+Laboratory sessions Mondays 1:00PM - 3:45PM & 4:00PM – 6:45PM ECSN 3.108,114,118
+Professor Contact Information
+Instructor: Hossein Pedram
+Email: Hossein.Pedram@utdallas.edu
+Office: ECSN 4.320
+Consultation hours: Mondays, Wednesdays 10:00AM – 12:00PM
+Teaching Assistants: TBD
+TA Email: TBD
+TA Office hours : TBD
+Course Pre-requisites and/or Co-requisites
+Pre-requisites: CE/EE 3311, CE/EE 3320
+Co-requisite: CE/EE 4304
+Basically, digital logic background and C programming
+Course Description
+The objectives of this course are to understand how embedded system work and in particular the
+microcontroller. In particular:
+• Details of a microcontroller unit architecture. Including, the Program Counter, Stack, Status Register,
+General Purpose Registers and ALU.
+• Instruction Set Architecture
+• Memories (SRAM, DRAM, EPROM, EEPROM) and Memory Mapped IO peripheral devices.
+• Peripheral devices, including general purpose IOs (GPIOs), synchronous and asynchronous serial
+communication interfaces including UART, SPI and I2C.
+• Analog to Digital Conversion (ADC)
+• Programming the microcontroller using C language.
+• Finite State machines
+1
+• Interrupts and low-power event driven programming
+• Internet of Things – IOT.
+Teaching and Learning Materials:
+Lecture notes and other teaching and learning materials can be downloaded from eLearning.
+Announcements on teaching and course administration issues will be posted online. You must check the
+announcements regularly.
+Textbook:
+There is no required textbook for this course.
+References:
+[T1] Embedded Systems: Introduction to Arm® Cortex™-M Microcontrollers, Fifth Edition (Volume 1) 5th
+Edition, By: Jonathan W Valvano, ISBN-13: 978-1477508992, ISBN-10: 1477508996
+[T2] Embedded Systems: Real-Time Interfacing to Arm Cortex-M Microcontrollers, 5th Edition, By: Jonathan
+W Valvano, ISBN-13: 978-1463590154, ISBN-10: 1463590156.
+[T3] C Programming Language (2nd Edition), Authors: Brian W. Kernighan, Dennis M. Ritchie, Publisher:
+Prentice Hall (April 1, 1988), ISBN: 0131103628
+Assessments
+There will 2 exams, 9 labs, and 9 HW sets.
+• Lab performance and reports 30%
+• HW Assignments: 15%
+Examinations (50%)
+• Examination1 (25%)
+• Examination 2 (25%)
+• Attendance (5%)
+• In-class quizzes. (5%)
+• Total: 105%
+Examinations:
+There will be two non-cumulative examinations for this course, each covering approximately half of the
+material. Both exams will be administered during regular class meeting times and will be graded by the
+instructor. No make-up exams will be given, except under dire circumstances, such as serious illness
+– with doctor’s note.
+2
+How to do well on the exams?
+1. Do not Miss your Homework and Lab assignments.
+2. The questions on the exams will be similar to the Homework problems and Questions on Lab
+assignments. Nothing will be given out this context.
+Lectures Schedule:
+Lecture Time: 4:00am -5:15am, Tuesday & Thursday
+Lab Time: 10:00am-12.45pm Thursday
+Week Lecture
+Introduction to embedded systems.
+1
+Number systems.
+Microcontroller architecture and Program Execution
+2
+Introduction to assembly language
+Review of C language
+3
+Review of C language
+4
+GPIO (General-Purpose Input-Output)
+5 Interrupts
+Interrupts
+6
+UART
+Exam 1 Review
+7
+Exam1: Wednesday October 8, 2025, in class
+8 PWM (Pulse Width Modulation)
+9 Analog to Digital and Digital to analog Conversions (ADC &DAC)
+10 Finite State Machine – FSM
+Wired Communication Protocols: UART, SPI, I2C
+11
+Wireless Communication Protocols: Bluetooth
+Wireless Communication Protocols: WiFi
+12
+Computer Networking for Embedded Systems
+13 Computer Networking for Embedded Systems
+14 Operating Systems for Embedded Systems
+Real-Time Operating system (RTOS) for Embedded Systems
+Review of Exam 2
+15
+Exam 2 : Monday Dec 8, 2025 (in class)
+3
+Homework sets:
+HW 1 Introduction
+HW 2 Number systems and programming
+HW 3 Review of C programming language
+HW 4 Interrupts
+HW 5 UART
+HW 6 PWM
+HW 7 Digital-to-Analog and Analog-to-Digital Conversion
+HW 8 Finite State Machines (FSMs)
+HW 9 WiFi and Computer Networking
+HW 10 Operating Systems
+Laboratory Sessions:
+Lab 1 Introduction to ESP32-CAM
+GPIO (General-Purpose Input-Output) -- Using Arduino Functions
+Lab 2 GPIO (General-Purpose Input-Output) -- Using internal registers
+Lab 3 GPIO and Timer Interrupts
+Lab 4 Interrupts – Part 2
+Lab 5 UART (Universal Asynchronous Receiver-Transmitter)
+Lab 6 PWM and DC Motor Control
+Lab 7 Bluetooth and Proximity Sensor
+Lab 8 Analog-to-Digital and Digital-to-Analog Conversion
+Lab 9 FSM (Finite State Machine)
+Lab 10 SPI, I2C, BT -- Serial Peripheral Interface, Inter-Integrated Circuit, Bluetooth
+Lab 11 WiFi and Networking
+Lab 12 Real-Time Operating System (RTOS)
+UT Dallas Syllabus Policies and Procedures
+The information below constitutes the University's policies and procedures segment of course syllabi, as
+described in http://go.utdallas.edu/syllabus-policies
+Technical Support:
+If you experience any problems with your UT Dallas account, you may email assist@utdallas.edu or call the
+UT Dallas Computer Help Desk at 972-883-2911.
+4
+These descriptions and timelines are subject to change at the discretion of the Professor
+[END]
+5","[""Microcontroller architecture"", ""Program Counter and Stack"", ""Status Register and General Purpose Registers"", ""Arithmetic Logic Unit (ALU)"", ""Instruction Set Architecture"", ""Memory types (SRAM, DRAM, EPROM, EEPROM)"", ""Memory-Mapped I/O"", ""General Purpose Input-Output (GPIO)"", ""UART communication"", ""SPI communication"", ""I2C communication"", ""Analog-to-Digital Conversion (ADC)"", ""Digital-to-Analog Conversion (DAC)"", ""Pulse Width Modulation (PWM)"", ""Interrupts and event-driven programming"", ""Assembly language"", ""C programming for embedded systems"", ""Finite State Machines (FSM)"", ""Bluetooth wireless communication"", ""WiFi and computer networking"", ""Real-Time Operating Systems (RTOS)"", ""Internet of Things (IoT)"", ""Low-power programming"", ""ARM Cortex-M microcontrollers"", ""DC motor control""]","{""objectives"": ""Understand how embedded systems and microcontrollers work, including architecture, instruction sets, peripherals, memory management, communication protocols, and programming techniques for real-time applications."", ""tools_used"": [""ESP32-CAM microcontroller"", ""Arduino Functions"", ""C programming language"", ""Internal registers""], ""prerequisites"": ""CE/EE 3311 and CE/EE 3320 (digital logic background and C programming); Co-requisite: CE/EE 4304"", ""weekly_topics"": [""Introduction to embedded systems and number systems"", ""Microcontroller architecture and Program Execution"", ""Introduction to assembly language"", ""Review of C language"", ""GPIO (General-Purpose Input-Output)"", ""Interrupts"", ""UART"", ""PWM (Pulse Width Modulation)"", ""Analog-to-Digital and Digital-to-Analog Conversions (ADC & DAC)"", ""Finite State Machine (FSM)"", ""Wired Communication Protocols: UART, SPI, I2C"", ""Wireless Communication Protocols: Bluetooth and WiFi"", ""Computer Networking for Embedded Systems"", ""Operating Systems for Embedded Systems and Real-Time Operating Systems (RTOS)""]}",42,parsed,2026-04-07 01:25:54.331517,2026-04-07 17:12:16.39691

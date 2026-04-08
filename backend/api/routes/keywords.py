@@ -11,6 +11,63 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+@router.post("/classify-subdomains")
+async def trigger_classify_subdomains(
+    domain: str = Query(default="Computer Science", description="Keyword domain to classify"),
+    batch_size: int = Query(default=50, ge=10, le=100, description="Keywords per Claude API call"),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Trigger subdomain classification for all unclassified keywords in a domain.
+
+    Uses Claude Haiku to classify keywords into:
+    AI/ML | Cybersecurity | Data Science | Software Engineering | Networking | General CS
+
+    This runs as a background Celery task — returns the task ID immediately.
+    Check progress via /api/tasks/{task_id} or Celery logs.
+    """
+    from tasks.classify_tasks import classify_keyword_subdomains
+    task = classify_keyword_subdomains.delay(domain=domain, batch_size=batch_size)
+    logger.info(f"[Keywords API] classify_keyword_subdomains queued — task_id={task.id}")
+    return {
+        "message": f"Subdomain classification started for domain='{domain}'",
+        "task_id": task.id,
+        "domain": domain,
+        "batch_size": batch_size,
+    }
+
+
+@router.get("/subdomain-stats")
+async def subdomain_stats(
+    domain: str = Query(default="Computer Science"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Return keyword counts grouped by subdomain for a given domain."""
+    result = await db.execute(text("""
+        SELECT subdomain, COUNT(*) as count
+        FROM keywords
+        WHERE domain = :domain
+        GROUP BY subdomain
+        ORDER BY count DESC
+    """), {"domain": domain})
+    rows = result.fetchall()
+    total_result = await db.execute(text("""
+        SELECT COUNT(*) FROM keywords WHERE domain = :domain
+    """), {"domain": domain})
+    total = total_result.scalar()
+    unclassified_result = await db.execute(text("""
+        SELECT COUNT(*) FROM keywords WHERE domain = :domain AND subdomain IS NULL
+    """), {"domain": domain})
+    unclassified = unclassified_result.scalar()
+    return {
+        "domain": domain,
+        "total": total,
+        "unclassified": unclassified,
+        "distribution": {r[0] or "unclassified": r[1] for r in rows},
+    }
+
+
 @router.get("/")
 async def list_keywords(
     category: str = None,
@@ -103,4 +160,5 @@ async def emerging_keywords(
         {"text": r[0], "category": r[1], "domain": r[2], "frequency": r[3]}
         for r in rows
     ]
+
 
