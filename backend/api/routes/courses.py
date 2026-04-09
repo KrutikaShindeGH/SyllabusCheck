@@ -76,6 +76,24 @@ async def upload_syllabi(
         with open(file_path, "wb") as f:
             f.write(content)
 
+        # Extract text immediately at upload time so parsing does not depend
+        # on the file being present later (Railway has ephemeral filesystem)
+        # Run in thread executor since these are blocking calls in async context
+        import asyncio
+        from functools import partial
+        raw_text = ""
+        try:
+            loop = asyncio.get_event_loop()
+            if ext == ".pdf":
+                from services.parser.pdf import extract_text_from_pdf
+                raw_text = await loop.run_in_executor(None, extract_text_from_pdf, file_path)
+            elif ext in (".docx", ".doc"):
+                from services.parser.docx_parser import extract_text_from_docx
+                raw_text = await loop.run_in_executor(None, extract_text_from_docx, file_path)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Text extraction failed at upload: {e}")
+
         # Create DB record
         course = Course(
             owner_id=user.id,
@@ -83,6 +101,7 @@ async def upload_syllabi(
             semester=semester,
             domain=domain,
             file_path=file_path,
+            raw_text=raw_text or None,
             status="pending",
         )
         db.add(course)
@@ -147,7 +166,5 @@ async def delete_course(
 
     await db.delete(course)
     await db.commit()
-
-    
 
     

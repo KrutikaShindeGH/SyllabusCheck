@@ -124,3 +124,4 @@ async def get_gaps(
         raise HTTPException(status_code=404, detail=str(e))
 
     return report
+
