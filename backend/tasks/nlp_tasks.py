@@ -166,15 +166,19 @@ def parse_syllabus(self, course_id: str):
             course.status = "parsing"
             db.commit()
 
-            ext = os.path.splitext(course.file_path)[1].lower()
-            if ext == ".pdf":
-                raw_text = extract_text_from_pdf(course.file_path)
-            elif ext in (".docx", ".doc"):
-                raw_text = extract_text_from_docx(course.file_path)
+            # Use already-extracted text if available (uploaded before file loss)
+            # Otherwise try to extract from file (may fail on ephemeral filesystem)
+            if course.raw_text and len(course.raw_text) > 100:
+                raw_text = course.raw_text
             else:
-                raw_text = ""
-
-            course.raw_text = raw_text
+                ext = os.path.splitext(course.file_path)[1].lower() if course.file_path else ""
+                if ext == ".pdf":
+                    raw_text = extract_text_from_pdf(course.file_path)
+                elif ext in (".docx", ".doc"):
+                    raw_text = extract_text_from_docx(course.file_path)
+                else:
+                    raw_text = ""
+                course.raw_text = raw_text
 
             if raw_text and len(raw_text) > 100:
                 try:
