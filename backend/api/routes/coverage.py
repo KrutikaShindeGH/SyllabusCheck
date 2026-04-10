@@ -119,7 +119,7 @@ async def get_gaps(
 
     from services.coverage.gap_analyzer import get_gap_analysis
     try:
-        report = get_gap_analysis(course_id)
+        report = get_gap_analysis(course_id, limit_keywords=150)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 

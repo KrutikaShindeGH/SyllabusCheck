@@ -55,7 +55,7 @@ def _tier_from_frequency(freq: int, thresholds: Dict[str, float]) -> str:
 def get_gap_analysis(course_id: str, limit_keywords: int = 50) -> Dict[str, Any]:
     with sync_engine.connect() as conn:
         course_row = conn.execute(
-            text("SELECT domain FROM courses WHERE id = :id"),
+            text("SELECT domain, coverage_score FROM courses WHERE id = :id"),
             {"id": course_id}
         ).fetchone()
 
@@ -84,9 +84,15 @@ def get_gap_analysis(course_id: str, limit_keywords: int = 50) -> Dict[str, Any]
             summary[r[0]] = r[1]
         summary["total"] = sum(summary[s] for s in ["covered", "partial", "missing"])
 
-        coverage_score = _compute_score(
-            summary["covered"], summary["partial"], summary["total"]
-        )
+        # Use stored coverage_score from courses table (computed by engine against 150 keywords)
+        # Fall back to recomputing from summary rows if not available
+        stored_score = course_row[1]
+        if stored_score is not None:
+            coverage_score = stored_score
+        else:
+            coverage_score = _compute_score(
+                summary["covered"], summary["partial"], summary["total"]
+            )
 
         # ── Gap rows: show ALL missing/partial so professors see full picture ──
         gap_rows = conn.execute(text("""
