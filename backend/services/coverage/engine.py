@@ -39,6 +39,9 @@ DOMAIN_FILTER_MAP = {
 
     "Electrical & Computer Engineering":   [("Electrical & Computer Engineering", None),
                                            ("Computer Science", "General CS")],
+    "Electrical & Computer Engineering/Cybersecurity": [("Electrical & Computer Engineering", None),
+                                           ("Computer Science", "Cybersecurity"),
+                                           ("Computer Science", "General CS")],
     "Bioengineering":                      [("Bioengineering", None)],
     "Mechanical Engineering":              [("Mechanical Engineering", None)],
     "Materials Science & Engineering":     [("Materials Science & Engineering", None)],
@@ -308,4 +311,5 @@ def compute_coverage_for_course(course_id: str) -> Dict:
         "domain":          course_domain,
         "domains_checked": relevant_domains,
     }
+
 
