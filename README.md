@@ -44,6 +44,7 @@ SyllabusCheck helps university professors keep their course syllabi aligned with
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
 - [Git](https://git-scm.com/)
 - An [OpenAI API key](https://platform.openai.com/api-keys)
+- An [Anthropic API key](https://platform.claude.com/dashboard)
 - A [Google OAuth client](https://console.cloud.google.com/) (for Google login)
 - A [Railway account](https://railway.app/) (for deployment)
 
