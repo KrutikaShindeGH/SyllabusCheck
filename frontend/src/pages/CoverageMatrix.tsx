@@ -92,11 +92,13 @@ function MiniBar({ label, value, total, color }: {
   );
 }
 
-function CourseCard({ course, cells, expanded, onToggle }: {
+function CourseCard({ course, cells, expanded, onToggle, onRecompute, recomputing }: {
   course: CourseDetail;
   cells: Record<string, Cell>;
   expanded: boolean;
   onToggle: () => void;
+  onRecompute: (id: string) => void;
+  recomputing: boolean;
 }) {
   const { summary, keywords } = course;
   const coveredKws  = keywords.filter(k => cells[`${course.id}_${k.id}`]?.status === "covered");
@@ -126,12 +128,22 @@ function CourseCard({ course, cells, expanded, onToggle }: {
                 {course.domain}
               </span>
             </div>
-            <button
-              onClick={onToggle}
-              className="shrink-0 text-xs px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition font-medium"
-            >
-              {expanded ? "▲ Hide" : "▼ Details"}
-            </button>
+            <div className="flex gap-2 shrink-0">
+              <button
+                onClick={() => onRecompute(course.id)}
+                disabled={recomputing}
+                className="text-xs px-3 py-1.5 rounded-lg bg-[#C75B12]/10 hover:bg-[#C75B12]/20 text-[#C75B12] transition font-medium disabled:opacity-50"
+                title="Recompute coverage for this course"
+              >
+                {recomputing ? "⏳ Computing…" : "⟳ Recompute"}
+              </button>
+              <button
+                onClick={onToggle}
+                className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition font-medium"
+              >
+                {expanded ? "▲ Hide" : "▼ Details"}
+              </button>
+            </div>
           </div>
 
           {/* Coverage bars */}
@@ -257,15 +269,33 @@ export default function CoverageMatrix() {
   const [error, setError]         = useState<string | null>(null);
   const [limit, setLimit]         = useState(50);
   const [expandedIds, setExpanded] = useState<Set<string>>(new Set());
+  const [recomputing, setRecomputing] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchMatrix = () => {
     setLoading(true);
     setError(null);
     api.get(`/coverage/matrix?limit=${limit}`)
       .then(r => setData(r.data))
       .catch(e => setError(e?.response?.data?.detail || "Failed to load coverage data"))
       .finally(() => setLoading(false));
-  }, [limit]);
+  };
+
+  useEffect(() => { fetchMatrix(); }, [limit]);
+
+  const recomputeCoverage = async (courseId: string) => {
+    setRecomputing(courseId);
+    try {
+      await api.post(`/coverage/${courseId}/compute`);
+      // Poll for completion then refresh
+      setTimeout(() => {
+        fetchMatrix();
+        setRecomputing(null);
+      }, 35000); // wait 35s for worker to finish
+    } catch (e: any) {
+      setRecomputing(null);
+      alert(e?.response?.data?.detail || "Failed to trigger recompute");
+    }
+  };
 
   const toggleExpand = (id: string) => {
     setExpanded(prev => {
@@ -373,6 +403,8 @@ export default function CoverageMatrix() {
               cells={cells}
               expanded={expandedIds.has(course.id)}
               onToggle={() => toggleExpand(course.id)}
+              onRecompute={recomputeCoverage}
+              recomputing={recomputing === course.id}
             />
           ))}
         </div>
@@ -380,5 +412,4 @@ export default function CoverageMatrix() {
     </div>
   );
 }
-
 

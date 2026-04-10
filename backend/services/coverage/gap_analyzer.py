@@ -240,8 +240,10 @@ def get_coverage_matrix(limit_keywords: int = 50) -> Dict[str, Any]:
                 elif cell["status"] == "partial":  partial += 1
                 else:                              missing += 1
 
-        # Use shared formula — same weights as get_gap_analysis
-        score = _compute_score(covered, partial, len(kw_ids))
+        # Use stored coverage_score from courses table (computed by engine against 150 keywords)
+        # Fall back to recomputing from limited rows if not stored
+        stored_score = c[3]
+        score = stored_score if stored_score is not None else _compute_score(covered, partial, len(kw_ids))
 
         course_details.append({
             "id":             course_id,
