@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import api from "../lib/api";
 
 interface KeywordDetail {
@@ -264,12 +264,14 @@ function CourseCard({ course, cells, expanded, onToggle, onRecompute, recomputin
 }
 
 export default function CoverageMatrix() {
-  const [data, setData]           = useState<MatrixData | null>(null);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState<string | null>(null);
-  const [limit, setLimit]         = useState(50);
-  const [expandedIds, setExpanded] = useState<Set<string>>(new Set());
+  const [data, setData]             = useState<MatrixData | null>(null);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState<string | null>(null);
+  const [limit, setLimit]           = useState(50);
+  const [expandedIds, setExpanded]  = useState<Set<string>>(new Set());
   const [recomputing, setRecomputing] = useState<string | null>(null);
+  // track poll intervals so we can clear on unmount
+  const pollRefs = useRef<Record<string, ReturnType<typeof setInterval>>>({});
 
   const fetchMatrix = () => {
     setLoading(true);
@@ -280,21 +282,69 @@ export default function CoverageMatrix() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchMatrix(); }, [limit]);
+  useEffect(() => {
+    fetchMatrix();
+    // clear all polls on unmount
+    return () => {
+      Object.values(pollRefs.current).forEach(clearInterval);
+    };
+  }, [limit]);
 
   const recomputeCoverage = async (courseId: string) => {
     setRecomputing(courseId);
+
+    // clear any existing poll for this course
+    if (pollRefs.current[courseId]) {
+      clearInterval(pollRefs.current[courseId]);
+    }
+
     try {
       await api.post(`/coverage/${courseId}/compute`);
-      // Poll for completion then refresh
-      setTimeout(() => {
-        fetchMatrix();
-        setRecomputing(null);
-      }, 35000); // wait 35s for worker to finish
     } catch (e: any) {
       setRecomputing(null);
       alert(e?.response?.data?.detail || "Failed to trigger recompute");
+      return;
     }
+
+    // snapshot the current counts so we can detect when the worker writes new data
+    const currentCourse = data?.course_details.find(c => c.id === courseId);
+    const prevTotal = currentCourse?.summary?.total ?? -1;
+
+    let attempts = 0;
+    const MAX_ATTEMPTS = 24; // poll for up to 2 minutes (24 × 5s)
+
+    pollRefs.current[courseId] = setInterval(async () => {
+      attempts++;
+      try {
+        // fetch only this course's coverage rows directly from DB
+        const res = await api.get(`/coverage/${courseId}`);
+        const rows: { status: string }[] = res.data;
+
+        const newTotal = rows.length;
+        const newCovered = rows.filter(r => r.status === "covered").length;
+        const newMissing = rows.filter(r => r.status === "missing").length;
+
+        // worker has written new data when total rows exist and differ from prev
+        // (or after enough time has passed, just accept whatever is there)
+        const workerDone =
+          newTotal > 0 && (newTotal !== prevTotal || attempts >= 6);
+
+        if (workerDone || attempts >= MAX_ATTEMPTS) {
+          clearInterval(pollRefs.current[courseId]);
+          delete pollRefs.current[courseId];
+          setRecomputing(null);
+          // now refresh the full matrix so the card re-renders with new data
+          fetchMatrix();
+        }
+      } catch {
+        // network hiccup — just keep polling
+        if (attempts >= MAX_ATTEMPTS) {
+          clearInterval(pollRefs.current[courseId]);
+          delete pollRefs.current[courseId];
+          setRecomputing(null);
+        }
+      }
+    }, 5000); // poll every 5 seconds
   };
 
   const toggleExpand = (id: string) => {

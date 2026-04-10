@@ -115,6 +115,26 @@ Write a 3-sentence gap analysis for the professor. Be specific about what is mis
         )
 
 
+def _deduplicate_coverage_rows(coverage_rows: list[dict]) -> list[dict]:
+    """
+    Remove duplicate keyword_text entries per course.
+    When the same keyword text appears multiple times for the same course
+    (e.g. stored under different categories/subdomains), keep only the row
+    with the highest frequency. This prevents duplicates in the reports UI.
+    """
+    # key = (course_id, keyword_text_lower) → keep highest-frequency row
+    seen: dict[tuple, dict] = {}
+    for row in coverage_rows:
+        key = (str(row["course_id"]), row["keyword_text"].strip().lower())
+        if key not in seen:
+            seen[key] = row
+        else:
+            # keep the row with higher frequency (more informative)
+            if (row.get("frequency") or 0) > (seen[key].get("frequency") or 0):
+                seen[key] = row
+    return list(seen.values())
+
+
 # ── Routes ─────────────────────────────────────────────────────────────────────
 
 @router.get("/", response_model=list[ReportOut])
@@ -193,7 +213,11 @@ async def generate_report(
         ),
         params,
     )
-    coverage_rows = [dict(r) for r in coverage_result.mappings().all()]
+    raw_coverage_rows = [dict(r) for r in coverage_result.mappings().all()]
+
+    # Deduplicate: same keyword_text appearing multiple times per course
+    # (caused by keywords stored under different categories/subdomains)
+    coverage_rows = _deduplicate_coverage_rows(raw_coverage_rows)
 
     # 3. Generate AI summary (per-course or combined) ─────────────────────────
     courses_list = [dict(c) for c in courses]
