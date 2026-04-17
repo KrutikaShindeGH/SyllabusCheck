@@ -12,7 +12,7 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from sqlalchemy import text
+from sqlalchemy import text, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.routes.auth import get_current_user
@@ -37,9 +37,10 @@ class ReportOut(BaseModel):
     id: str
     title: str
     created_at: str
-    pdf_path: Optional[str]
-    xlsx_path: Optional[str]
-    summary: Optional[dict]
+    pdf_path: Optional[str] = None
+    xlsx_path: Optional[str] = None
+    summary: Optional[dict] = None
+    filters: Optional[dict] = None          # ← was missing, caused serialization errors
 
     class Config:
         from_attributes = True
@@ -48,18 +49,16 @@ class ReportOut(BaseModel):
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 async def _get_report_or_404(report_id: str, user: User, db: AsyncSession) -> Report:
-    result = await db.execute(
-        text("SELECT * FROM reports WHERE id = :id AND owner_id = :uid"),
-        {"id": report_id, "uid": str(user.id)},
+    """Fetch a report by id scoped to the current user, or raise 404."""
+    stmt = (
+        select(Report)
+        .where(Report.id == uuid.UUID(report_id), Report.owner_id == user.id)
     )
-    row = result.fetchone()
-    if not row:
+    result = await db.execute(stmt)
+    report = result.scalar_one_or_none()
+    if not report:
         raise HTTPException(status_code=404, detail="Report not found")
-    from sqlalchemy import select
-    from models.models import Report as ReportModel
-    stmt = select(ReportModel).where(ReportModel.id == uuid.UUID(report_id))
-    result2 = await db.execute(stmt)
-    return result2.scalar_one_or_none()
+    return report
 
 
 async def _build_ai_summary(course: dict, coverage_rows: list[dict]) -> str:
@@ -120,16 +119,14 @@ def _deduplicate_coverage_rows(coverage_rows: list[dict]) -> list[dict]:
     Remove duplicate keyword_text entries per course.
     When the same keyword text appears multiple times for the same course
     (e.g. stored under different categories/subdomains), keep only the row
-    with the highest frequency. This prevents duplicates in the reports UI.
+    with the highest frequency.
     """
-    # key = (course_id, keyword_text_lower) → keep highest-frequency row
     seen: dict[tuple, dict] = {}
     for row in coverage_rows:
         key = (str(row["course_id"]), row["keyword_text"].strip().lower())
         if key not in seen:
             seen[key] = row
         else:
-            # keep the row with higher frequency (more informative)
             if (row.get("frequency") or 0) > (seen[key].get("frequency") or 0):
                 seen[key] = row
     return list(seen.values())
@@ -152,15 +149,15 @@ async def list_reports(
     )
     rows = result.mappings().all()
     return [
-        {
-            "id": str(r["id"]),
-            "title": r["title"],
-            "created_at": r["created_at"].isoformat(),
-            "pdf_path": r["pdf_path"],
-            "xlsx_path": r["xlsx_path"],
-            "summary": r["summary"],
-            "filters": r["filters"],
-        }
+        ReportOut(
+            id=str(r["id"]),
+            title=r["title"],
+            created_at=r["created_at"].isoformat(),
+            pdf_path=r["pdf_path"],
+            xlsx_path=r["xlsx_path"],
+            summary=r["summary"],
+            filters=r["filters"],
+        )
         for r in rows
     ]
 
@@ -214,17 +211,13 @@ async def generate_report(
         params,
     )
     raw_coverage_rows = [dict(r) for r in coverage_result.mappings().all()]
-
-    # Deduplicate: same keyword_text appearing multiple times per course
-    # (caused by keywords stored under different categories/subdomains)
     coverage_rows = _deduplicate_coverage_rows(raw_coverage_rows)
 
-    # 3. Generate AI summary (per-course or combined) ─────────────────────────
+    # 3. Generate AI summary ──────────────────────────────────────────────────
     courses_list = [dict(c) for c in courses]
     if len(courses_list) == 1:
         ai_summary = await _build_ai_summary(courses_list[0], coverage_rows)
     else:
-        # Combined: quick aggregate summary
         total_missing = sum(1 for r in coverage_rows if r["status"] == "missing")
         total_covered = sum(1 for r in coverage_rows if r["status"] == "covered")
         avg_score = round(
@@ -301,7 +294,7 @@ async def download_pdf(
     current_user: User = Depends(get_current_user),
 ):
     report = await _get_report_or_404(report_id, current_user, db)
-    if not report or not report.pdf_path or not os.path.exists(report.pdf_path):
+    if not report.pdf_path or not os.path.exists(report.pdf_path):
         raise HTTPException(status_code=404, detail="PDF not found. Re-generate the report.")
     return FileResponse(
         report.pdf_path,
@@ -317,7 +310,7 @@ async def download_xlsx(
     current_user: User = Depends(get_current_user),
 ):
     report = await _get_report_or_404(report_id, current_user, db)
-    if not report or not report.xlsx_path or not os.path.exists(report.xlsx_path):
+    if not report.xlsx_path or not os.path.exists(report.xlsx_path):
         raise HTTPException(status_code=404, detail="Excel file not found. Re-generate the report.")
     return FileResponse(
         report.xlsx_path,
@@ -333,8 +326,6 @@ async def delete_report(
     current_user: User = Depends(get_current_user),
 ):
     report = await _get_report_or_404(report_id, current_user, db)
-    if not report:
-        raise HTTPException(status_code=404, detail="Report not found")
     for path in [report.pdf_path, report.xlsx_path]:
         if path and os.path.exists(path):
             try:
@@ -343,5 +334,4 @@ async def delete_report(
                 pass
     await db.delete(report)
     await db.commit()
-
     

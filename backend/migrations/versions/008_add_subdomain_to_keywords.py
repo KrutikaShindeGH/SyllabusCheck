@@ -9,6 +9,8 @@ Down-revision: 007_phase7_google_reports
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import inspect
+
 
 revision = "008_add_subdomain_to_keywords"
 down_revision = "007_phase7_google_reports"
@@ -17,16 +19,19 @@ depends_on = None
 
 
 def upgrade():
-    op.add_column(
-        "keywords",
-        sa.Column("subdomain", sa.String(100), nullable=True),
-    )
-    # Index helps gap_analyzer and coverage_matrix queries that filter/group by subdomain
-    op.create_index("ix_keywords_subdomain", "keywords", ["subdomain"])
-
+    # Get current columns
+    conn = op.get_bind()
+    inspector = inspect(conn)
+    columns = [col['name'] for col in inspector.get_columns('keywords')]
+    
+    # Only add if it doesn't exist
+    if 'subdomain' not in columns:
+        op.add_column('keywords',
+            sa.Column('subdomain', sa.String(), nullable=True)
+        )
 
 def downgrade():
-    op.drop_index("ix_keywords_subdomain", table_name="keywords")
-    op.drop_column("keywords", "subdomain")
+    op.drop_column('keywords', 'subdomain')
 
+    
     

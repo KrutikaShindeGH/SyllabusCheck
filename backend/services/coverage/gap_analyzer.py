@@ -52,12 +52,19 @@ def _tier_from_frequency(freq: int, thresholds: Dict[str, float]) -> str:
     return "low"
 
 
-def get_gap_analysis(course_id: str, limit_keywords: int = 50) -> Dict[str, Any]:
+def get_gap_analysis(course_id: str, limit_keywords: int = 50, owner_id: Optional[str] = None) -> Dict[str, Any]:
     with sync_engine.connect() as conn:
-        course_row = conn.execute(
-            text("SELECT domain, coverage_score FROM courses WHERE id = :id"),
-            {"id": course_id}
-        ).fetchone()
+        # Fetch course — optionally scope to owner for security
+        if owner_id:
+            course_row = conn.execute(
+                text("SELECT domain, coverage_score FROM courses WHERE id = :id AND owner_id = :owner_id"),
+                {"id": course_id, "owner_id": owner_id}
+            ).fetchone()
+        else:
+            course_row = conn.execute(
+                text("SELECT domain, coverage_score FROM courses WHERE id = :id"),
+                {"id": course_id}
+            ).fetchone()
 
         if not course_row:
             raise ValueError(f"Course {course_id} not found")
@@ -84,8 +91,6 @@ def get_gap_analysis(course_id: str, limit_keywords: int = 50) -> Dict[str, Any]
             summary[r[0]] = r[1]
         summary["total"] = sum(summary[s] for s in ["covered", "partial", "missing"])
 
-        # Use stored coverage_score from courses table (computed by engine against 150 keywords)
-        # Fall back to recomputing from summary rows if not available
         stored_score = course_row[1]
         if stored_score is not None:
             coverage_score = stored_score
@@ -238,7 +243,6 @@ def get_coverage_matrix(limit_keywords: int = 50, owner_id: Optional[str] = None
         course_kws = [keywords_by_id[kid] for kid in kw_ids if kid in keywords_by_id]
         course_kws.sort(key=lambda x: x["frequency"], reverse=True)
 
-        # Compute covered/partial/missing counts for this course's top N keywords
         covered = partial = missing = 0
         for kid in kw_ids:
             cell = cells.get(f"{course_id}_{kid}")
@@ -247,8 +251,6 @@ def get_coverage_matrix(limit_keywords: int = 50, owner_id: Optional[str] = None
                 elif cell["status"] == "partial":  partial += 1
                 else:                              missing += 1
 
-        # Use stored coverage_score from courses table (computed by engine against 150 keywords)
-        # Fall back to recomputing from limited rows if not stored
         stored_score = c[3]
         score = stored_score if stored_score is not None else _compute_score(covered, partial, len(kw_ids))
 
@@ -267,7 +269,6 @@ def get_coverage_matrix(limit_keywords: int = 50, owner_id: Optional[str] = None
             },
         })
 
-    # Flat global keyword list for legacy compat
     all_kws_sorted = sorted(keywords_by_id.values(), key=lambda x: x["frequency"], reverse=True)
 
     return {
@@ -277,6 +278,7 @@ def get_coverage_matrix(limit_keywords: int = 50, owner_id: Optional[str] = None
         "cells":          cells,
         "course_details": course_details,
     }
+
 
 def get_program_gap_analysis(
     course_ids: List[str],
@@ -350,7 +352,12 @@ def get_program_gap_analysis(
             ORDER BY frequency DESC
         """), {"ids": list(required_kw_ids)}).fetchall()
 
-        kw_map = {r[0]: {"text": r[1], "category": r[2], "frequency": r[3]} for r in kw_rows}
+        # Build map keyed by id AND by text for fast lookup in both directions
+        kw_map: Dict[str, Dict] = {}
+        kw_freq_by_text: Dict[str, int] = {}
+        for r in kw_rows:
+            kw_map[r[0]] = {"text": r[1], "category": r[2], "frequency": r[3]}
+            kw_freq_by_text[r[1]] = r[3]
 
         # Overall: which required keywords are covered/partial across ALL selected courses?
         all_cr_rows = conn.execute(text("""
@@ -394,6 +401,14 @@ def get_program_gap_analysis(
                 ],
             })
 
+        # ── FIX: sort missing keywords by frequency using the id-keyed map ──
+        missing_kw_texts = [
+            {"text": kw_map[kid]["text"], "frequency": kw_map[kid]["frequency"]}
+            for kid in missing_overall
+            if kid in kw_map
+        ]
+        missing_kw_texts.sort(key=lambda x: -x["frequency"])
+
         return {
             "job_role": job_role,
             "jobs_matched": len(job_ids),
@@ -405,13 +420,8 @@ def get_program_gap_analysis(
             "covered_keywords": sorted(
                 [kw_map[kid]["text"] for kid in covered_overall if kid in kw_map]
             ),
-            "missing_keywords": sorted(
-                [kw_map[kid]["text"] for kid in missing_overall if kid in kw_map],
-                key=lambda t: -kw_map.get(
-                    next((k for k, v in kw_map.items() if v["text"] == t), ""), {}
-                ).get("frequency", 0),
-            ),
+            "missing_keywords": [k["text"] for k in missing_kw_texts],
             "per_course_breakdown": sorted(per_course, key=lambda x: -x["coverage_pct"]),
         }
-
-
+    
+    
