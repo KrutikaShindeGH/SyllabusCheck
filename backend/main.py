@@ -24,8 +24,6 @@ async def lifespan(app: FastAPI):
 
     async with engine.begin() as conn:
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
-        await conn.run_sync(Base.metadata.create_all)
-        # Idempotent: add subdomain column to keywords if it doesn't exist yet
         await conn.execute(text("""
             ALTER TABLE keywords
             ADD COLUMN IF NOT EXISTS subdomain VARCHAR(100)
