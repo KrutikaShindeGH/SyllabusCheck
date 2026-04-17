@@ -11,6 +11,8 @@ import JobExplorer    from './pages/JobExplorer'
 import CoverageMatrix from './pages/CoverageMatrix'
 import GapAnalysis    from './pages/GapAnalysis'
 import Reports        from './pages/Reports'
+import ProgramGapAnalysis   from './pages/ProgramGapAnalysis'
+
 
 // ── Handle Google OAuth redirect synchronously before React renders ───────────
 // Backend redirects to: /?access_token=...&refresh_token=...&email=...&name=...
@@ -76,6 +78,7 @@ function ProtectedApp() {
         <Route path="/coverage"  element={<CoverageMatrix />} />
         <Route path="/gaps"      element={<GapAnalysis />} />
         <Route path="/reports"   element={<Reports />} />
+        <Route path="/program-gap"   element={<ProgramGapAnalysis />} />
         <Route path="*"          element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </Layout>

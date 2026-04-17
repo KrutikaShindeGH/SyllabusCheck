@@ -7,6 +7,7 @@ const nav = [
   { path: '/jobs',       label: 'Job Explorer',   icon: '💼' },
   { path: '/coverage',   label: 'Coverage Matrix',icon: '🔥' },
   { path: '/gaps',       label: 'Gap Analysis',   icon: '⚡' },
+  { path: '/program-gap', label: 'Program Gap',   icon: '🎯' },
   { path: '/reports',    label: 'Reports',        icon: '📊' },
 ]
 

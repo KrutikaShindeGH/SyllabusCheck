@@ -35,11 +35,10 @@ async def get_matrix(
     current_user: User = Depends(get_current_user),
 ):
     """
-    Return coverage matrix data for heatmap.
-    Rows = top N keywords, Cols = all user's courses.
+        Return coverage matrix data for heatmap — scoped to the current user's courses only.
     """
     from services.coverage.gap_analyzer import get_coverage_matrix
-    matrix = get_coverage_matrix(limit_keywords=limit)
+    matrix = get_coverage_matrix(limit_keywords=limit, owner_id=str(current_user.id))
     return matrix
 
 
@@ -124,4 +123,43 @@ async def get_gaps(
         raise HTTPException(status_code=404, detail=str(e))
 
     return report
+
+
+# ── POST /api/coverage/program-gap ────────────────────────────────────────────
+
+from pydantic import BaseModel as _BaseModel
+
+class ProgramGapRequest(_BaseModel):
+    course_ids: list[str]
+    job_role: str
+
+
+@router.post("/program-gap")
+async def program_gap_analysis(
+    payload: ProgramGapRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Compare a set of syllabi (selected by the user via drag-drop) against a job role.
+    Returns overall + per-course keyword coverage.
+    """
+    if not payload.course_ids:
+        raise HTTPException(status_code=400, detail="At least one course_id is required")
+    if not payload.job_role.strip():
+        raise HTTPException(status_code=400, detail="job_role is required")
+
+    from services.coverage.gap_analyzer import get_program_gap_analysis
+    try:
+        result = get_program_gap_analysis(
+            course_ids=payload.course_ids,
+            job_role=payload.job_role,
+            owner_id=str(current_user.id),
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    return result
+
+
 

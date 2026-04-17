@@ -145,19 +145,26 @@ def get_gap_analysis(course_id: str, limit_keywords: int = 50) -> Dict[str, Any]
     }
 
 
-def get_coverage_matrix(limit_keywords: int = 50) -> Dict[str, Any]:
+def get_coverage_matrix(limit_keywords: int = 50, owner_id: Optional[str] = None) -> Dict[str, Any]:
     """
-    Returns per-course coverage data.
+    Returns per-course coverage data scoped to the given owner.
     For each course, fetches top N keywords FROM THAT COURSE'S OWN DOMAIN.
-    This ensures Accounting courses show Accounting keywords, CS shows CS, etc.
     """
     with sync_engine.connect() as conn:
-        # All courses with domain info
-        course_rows = conn.execute(text("""
-            SELECT id::text, title, code, coverage_score, domain
-            FROM courses
-            ORDER BY created_at
-        """)).fetchall()
+        # All courses with domain info — filtered to owner if provided
+        if owner_id:
+            course_rows = conn.execute(text("""
+                SELECT id::text, title, code, coverage_score, domain
+                FROM courses
+                WHERE owner_id = :owner_id
+                ORDER BY created_at
+            """), {"owner_id": owner_id}).fetchall()
+        else:
+            course_rows = conn.execute(text("""
+                SELECT id::text, title, code, coverage_score, domain
+                FROM courses
+                ORDER BY created_at
+            """)).fetchall()
 
         if not course_rows:
             return {"keywords": [], "courses": [], "cells": {}, "course_details": []}
@@ -270,4 +277,141 @@ def get_coverage_matrix(limit_keywords: int = 50) -> Dict[str, Any]:
         "cells":          cells,
         "course_details": course_details,
     }
+
+def get_program_gap_analysis(
+    course_ids: List[str],
+    job_role: str,
+    owner_id: str,
+) -> Dict[str, Any]:
+    """
+    Compare a set of the user's syllabi against all keywords found in jobs
+    matching the given job_role string. Returns overall + per-course breakdown.
+    """
+    with sync_engine.connect() as conn:
+        # Verify all courses belong to this user
+        verified = conn.execute(text("""
+            SELECT id::text, title, domain
+            FROM courses
+            WHERE id::text = ANY(:ids) AND owner_id = :owner_id
+        """), {"ids": course_ids, "owner_id": owner_id}).fetchall()
+
+        if not verified:
+            raise ValueError("No matching courses found for this user")
+
+        verified_ids = [r[0] for r in verified]
+
+        # Find job postings matching the job_role (title contains the string)
+        job_rows = conn.execute(text("""
+            SELECT id::text
+            FROM job_postings
+            WHERE LOWER(title) LIKE :role
+            LIMIT 200
+        """), {"role": f"%{job_role.lower()}%"}).fetchall()
+
+        job_ids = [r[0] for r in job_rows]
+
+        if not job_ids:
+            return {
+                "job_role": job_role,
+                "total_required_keywords": 0,
+                "total_covered": 0,
+                "overall_coverage_pct": 0.0,
+                "covered_keywords": [],
+                "missing_keywords": [],
+                "per_course_breakdown": [],
+                "warning": f"No job postings found matching '{job_role}'. Try a broader title.",
+            }
+
+        # Get all keyword IDs required by those jobs
+        jk_rows = conn.execute(text("""
+            SELECT DISTINCT keyword_id::text
+            FROM job_keywords
+            WHERE job_id::text = ANY(:job_ids)
+        """), {"job_ids": job_ids}).fetchall()
+
+        required_kw_ids = {r[0] for r in jk_rows}
+
+        if not required_kw_ids:
+            return {
+                "job_role": job_role,
+                "total_required_keywords": 0,
+                "total_covered": 0,
+                "overall_coverage_pct": 0.0,
+                "covered_keywords": [],
+                "missing_keywords": [],
+                "per_course_breakdown": [],
+            }
+
+        # Get keyword text map
+        kw_rows = conn.execute(text("""
+            SELECT id::text, text, category, frequency
+            FROM keywords
+            WHERE id::text = ANY(:ids)
+            ORDER BY frequency DESC
+        """), {"ids": list(required_kw_ids)}).fetchall()
+
+        kw_map = {r[0]: {"text": r[1], "category": r[2], "frequency": r[3]} for r in kw_rows}
+
+        # Overall: which required keywords are covered/partial across ALL selected courses?
+        all_cr_rows = conn.execute(text("""
+            SELECT keyword_id::text, status
+            FROM coverage_rows
+            WHERE course_id::text = ANY(:cids)
+              AND keyword_id::text = ANY(:kw_ids)
+        """), {"cids": verified_ids, "kw_ids": list(required_kw_ids)}).fetchall()
+
+        # A keyword is "covered" overall if ANY of the selected courses covers/partials it
+        covered_overall: set = set()
+        for r in all_cr_rows:
+            if r[1] in ("covered", "partial"):
+                covered_overall.add(r[0])
+
+        missing_overall = required_kw_ids - covered_overall
+
+        # Per-course breakdown
+        per_course = []
+        for course_row in verified:
+            cid = course_row[0]
+            cr_rows = conn.execute(text("""
+                SELECT keyword_id::text, status
+                FROM coverage_rows
+                WHERE course_id = :cid
+                  AND keyword_id::text = ANY(:kw_ids)
+            """), {"cid": cid, "kw_ids": list(required_kw_ids)}).fetchall()
+
+            c_covered = {r[0] for r in cr_rows if r[1] in ("covered", "partial")}
+            c_pct = round(len(c_covered) / max(len(required_kw_ids), 1) * 100, 1)
+
+            per_course.append({
+                "course_id": cid,
+                "course_name": course_row[1],
+                "domain": course_row[2],
+                "covered_count": len(c_covered),
+                "total_required": len(required_kw_ids),
+                "coverage_pct": c_pct,
+                "covered_keywords": [
+                    kw_map[kid]["text"] for kid in c_covered if kid in kw_map
+                ],
+            })
+
+        return {
+            "job_role": job_role,
+            "jobs_matched": len(job_ids),
+            "total_required_keywords": len(required_kw_ids),
+            "total_covered": len(covered_overall),
+            "overall_coverage_pct": round(
+                len(covered_overall) / max(len(required_kw_ids), 1) * 100, 1
+            ),
+            "covered_keywords": sorted(
+                [kw_map[kid]["text"] for kid in covered_overall if kid in kw_map]
+            ),
+            "missing_keywords": sorted(
+                [kw_map[kid]["text"] for kid in missing_overall if kid in kw_map],
+                key=lambda t: -kw_map.get(
+                    next((k for k, v in kw_map.items() if v["text"] == t), ""), {}
+                ).get("frequency", 0),
+            ),
+            "per_course_breakdown": sorted(per_course, key=lambda x: -x["coverage_pct"]),
+        }
+
 

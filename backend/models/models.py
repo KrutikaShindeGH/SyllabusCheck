@@ -36,6 +36,18 @@ class User(Base):
     courses: Mapped[list["Course"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
     reports: Mapped[list["Report"]] = relationship(back_populates="owner")
 
+# ── Program ────────────────────────────────────────────────────────────
+
+class Program(Base):
+    __tablename__ = "programs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    department: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now_utc)
+
+    courses: Mapped[list["Course"]] = relationship(back_populates="program")
 
 # ── Course / Syllabus ──────────────────────────────────────────────────
 
@@ -54,10 +66,12 @@ class Course(Base):
     parsed_sections: Mapped[Optional[dict]] = mapped_column(JSONB)  # segmented syllabus sections
     coverage_score: Mapped[Optional[float]] = mapped_column(Float)    # 0.0 – 100.0
     status: Mapped[str] = mapped_column(String(50), default="pending") # pending|parsed|scored
+    program_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("programs.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now_utc)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now_utc, onupdate=now_utc)
 
     owner: Mapped["User"] = relationship(back_populates="courses")
+    program: Mapped[Optional["Program"]] = relationship(back_populates="courses")
     coverage_rows: Mapped[list["CoverageRow"]] = relationship(back_populates="course", cascade="all, delete-orphan")
 
 
