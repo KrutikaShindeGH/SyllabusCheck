@@ -146,3 +146,35 @@ async def trigger_keyword_extraction():
     from tasks.nlp_tasks import extract_all_job_keywords
     result = extract_all_job_keywords.delay(batch_size=50, limit=5000)
     return {"task_id": str(result.id), "status": "queued"}
+
+@router.post("/admin/trigger-keyword-extraction-today")
+async def trigger_keyword_extraction_today(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_admin)
+):
+    from sqlalchemy import text
+    from datetime import date
+    from tasks.nlp_tasks import extract_job_keywords
+
+    # Get today's unprocessed jobs
+    result = await db.execute(text("""
+        SELECT id::text FROM job_postings
+        WHERE DATE(scraped_at) = CURRENT_DATE
+        AND id NOT IN (
+            SELECT DISTINCT job_id FROM job_keywords
+        )
+    """))
+    job_ids = [row[0] for row in result.fetchall()]
+
+    if not job_ids:
+        return {"status": "nothing to process", "count": 0}
+
+    for job_id in job_ids:
+        extract_job_keywords.delay(job_id)
+
+    return {
+        "status": "queued",
+        "count": len(job_ids),
+        "message": f"Queued keyword extraction for {len(job_ids)} jobs scraped today"
+    }
+
