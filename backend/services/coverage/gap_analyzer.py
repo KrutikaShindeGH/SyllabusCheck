@@ -17,10 +17,6 @@ DATABASE_URL_SYNC = settings.DATABASE_URL.replace(
 sync_engine = create_engine(DATABASE_URL_SYNC, pool_pre_ping=True)
 
 # ── Coverage score formula ─────────────────────────────────────────────────────
-# covered = 1.0 point  (skill is fully taught)
-# partial = 0.5 point  (skill is partially taught — half credit)
-# Score is computed against top 50 keywords by frequency (most in-demand skills)
-# so both Coverage Matrix and Gap Analysis always show the same number.
 COVERED_WEIGHT = 1.0
 PARTIAL_WEIGHT = 0.5
 
@@ -54,7 +50,6 @@ def _tier_from_frequency(freq: int, thresholds: Dict[str, float]) -> str:
 
 def get_gap_analysis(course_id: str, limit_keywords: int = 50, owner_id: Optional[str] = None) -> Dict[str, Any]:
     with sync_engine.connect() as conn:
-        # Fetch course — optionally scope to owner for security
         if owner_id:
             course_row = conn.execute(
                 text("SELECT domain, coverage_score FROM courses WHERE id = :id AND owner_id = :owner_id"),
@@ -69,7 +64,6 @@ def get_gap_analysis(course_id: str, limit_keywords: int = 50, owner_id: Optiona
         if not course_row:
             raise ValueError(f"Course {course_id} not found")
 
-        # ── Summary: count from top N keywords only (matches Coverage Matrix) ──
         summary_rows = conn.execute(text("""
             SELECT cr.status, COUNT(*) as cnt
             FROM coverage_rows cr
@@ -99,7 +93,6 @@ def get_gap_analysis(course_id: str, limit_keywords: int = 50, owner_id: Optiona
                 summary["covered"], summary["partial"], summary["total"]
             )
 
-        # ── Gap rows: show ALL missing/partial so professors see full picture ──
         gap_rows = conn.execute(text("""
             SELECT
                 k.id::text          AS keyword_id,
@@ -151,12 +144,7 @@ def get_gap_analysis(course_id: str, limit_keywords: int = 50, owner_id: Optiona
 
 
 def get_coverage_matrix(limit_keywords: int = 50, owner_id: Optional[str] = None) -> Dict[str, Any]:
-    """
-    Returns per-course coverage data scoped to the given owner.
-    For each course, fetches top N keywords FROM THAT COURSE'S OWN DOMAIN.
-    """
     with sync_engine.connect() as conn:
-        # All courses with domain info — filtered to owner if provided
         if owner_id:
             course_rows = conn.execute(text("""
                 SELECT id::text, title, code, coverage_score, domain
@@ -174,9 +162,8 @@ def get_coverage_matrix(limit_keywords: int = 50, owner_id: Optional[str] = None
         if not course_rows:
             return {"keywords": [], "courses": [], "cells": {}, "course_details": []}
 
-        # For each course, fetch its top N keywords by frequency
         all_keyword_ids = set()
-        course_keyword_map: Dict[str, List[str]] = {}  # course_id -> [keyword_ids]
+        course_keyword_map: Dict[str, List[str]] = {}
 
         for c in course_rows:
             course_id = c[0]
@@ -198,7 +185,6 @@ def get_coverage_matrix(limit_keywords: int = 50, owner_id: Optional[str] = None
             course_keyword_map[course_id] = kw_ids
             all_keyword_ids.update(kw_ids)
 
-        # Fetch full keyword details for all collected keyword IDs
         keywords_by_id: Dict[str, Dict] = {}
         if all_keyword_ids:
             kw_detail_rows = conn.execute(text("""
@@ -213,7 +199,6 @@ def get_coverage_matrix(limit_keywords: int = 50, owner_id: Optional[str] = None
                     "domain": r[3], "subdomain": r[4], "frequency": r[5]
                 }
 
-        # Fetch all coverage cells
         course_ids = [c[0] for c in course_rows]
         cells: Dict[str, Dict] = {}
 
@@ -235,7 +220,6 @@ def get_coverage_matrix(limit_keywords: int = 50, owner_id: Optional[str] = None
             for r in cell_rows:
                 cells[f"{r[0]}_{r[1]}"] = {"status": r[2], "score": round(r[3], 4)}
 
-    # Build per-course detail objects with their own keyword lists
     course_details = []
     for c in course_rows:
         course_id = c[0]
@@ -286,15 +270,18 @@ def get_program_gap_analysis(
     owner_id: str,
 ) -> Dict[str, Any]:
     """
-    Compare a set of the user's syllabi against all keywords found in jobs
-    matching the given job_role string. Returns overall + per-course breakdown.
+    Compare a set of syllabi against keywords found in job postings matching job_role.
+    Uses a two-strategy approach:
+    1. ID-based match: join job_keywords → coverage_rows via keyword_id
+    2. Text-based fallback: if ID match yields nothing, normalize keyword text and match
+       coverage_rows keywords against job keywords by normalized text
     """
     with sync_engine.connect() as conn:
-        # Verify all courses belong to this user
+        # Verify courses belong to this user
         verified = conn.execute(text("""
             SELECT id::text, title, domain
             FROM courses
-            WHERE id::text = ANY(:ids) AND owner_id = :owner_id
+            WHERE id::text = ANY(:ids) AND owner_id::text = :owner_id
         """), {"ids": course_ids, "owner_id": owner_id}).fetchall()
 
         if not verified:
@@ -302,7 +289,7 @@ def get_program_gap_analysis(
 
         verified_ids = [r[0] for r in verified]
 
-        # Find job postings matching the job_role (title contains the string)
+        # Find job postings matching the job_role
         job_rows = conn.execute(text("""
             SELECT id::text
             FROM job_postings
@@ -313,6 +300,18 @@ def get_program_gap_analysis(
         job_ids = [r[0] for r in job_rows]
 
         if not job_ids:
+            # Try broader match — split job_role by space and match any word
+            words = [w.strip() for w in job_role.lower().split() if len(w.strip()) > 2]
+            if words:
+                conditions = " OR ".join(f"LOWER(title) LIKE :w{i}" for i in range(len(words)))
+                params = {f"w{i}": f"%{w}%" for i, w in enumerate(words)}
+                job_rows = conn.execute(
+                    text(f"SELECT id::text FROM job_postings WHERE {conditions} LIMIT 200"),
+                    params
+                ).fetchall()
+                job_ids = [r[0] for r in job_rows]
+
+        if not job_ids:
             return {
                 "job_role": job_role,
                 "total_required_keywords": 0,
@@ -321,10 +320,10 @@ def get_program_gap_analysis(
                 "covered_keywords": [],
                 "missing_keywords": [],
                 "per_course_breakdown": [],
-                "warning": f"No job postings found matching '{job_role}'. Try a broader title.",
+                "warning": f"No job postings found matching '{job_role}'. Try a broader title like 'engineer' or 'developer'.",
             }
 
-        # Get all keyword IDs required by those jobs
+        # Get required keyword IDs from job postings
         jk_rows = conn.execute(text("""
             SELECT DISTINCT keyword_id::text
             FROM job_keywords
@@ -336,57 +335,117 @@ def get_program_gap_analysis(
         if not required_kw_ids:
             return {
                 "job_role": job_role,
+                "jobs_matched": len(job_ids),
                 "total_required_keywords": 0,
                 "total_covered": 0,
                 "overall_coverage_pct": 0.0,
                 "covered_keywords": [],
                 "missing_keywords": [],
                 "per_course_breakdown": [],
+                "warning": "Job postings were found but have no associated keywords. The job keyword index may need to be rebuilt.",
             }
 
-        # Get keyword text map
+        # Get keyword details for all required keyword IDs
         kw_rows = conn.execute(text("""
-            SELECT id::text, text, category, frequency
+            SELECT id::text, text, LOWER(REGEXP_REPLACE(text, '[^a-zA-Z0-9]', '', 'g')) as normalized_text,
+                   category, frequency
             FROM keywords
             WHERE id::text = ANY(:ids)
             ORDER BY frequency DESC
         """), {"ids": list(required_kw_ids)}).fetchall()
 
-        # Build map keyed by id AND by text for fast lookup in both directions
+        # Build maps keyed by id and by normalized text
         kw_map: Dict[str, Dict] = {}
-        kw_freq_by_text: Dict[str, int] = {}
+        kw_by_normalized: Dict[str, str] = {}  # normalized_text -> keyword_id
         for r in kw_rows:
-            kw_map[r[0]] = {"text": r[1], "category": r[2], "frequency": r[3]}
-            kw_freq_by_text[r[1]] = r[3]
+            kw_map[r[0]] = {"text": r[1], "category": r[3], "frequency": r[4]}
+            kw_by_normalized[r[2]] = r[0]
 
-        # Overall: which required keywords are covered/partial across ALL selected courses?
-        all_cr_rows = conn.execute(text("""
-            SELECT keyword_id::text, status
+        # --- Strategy 1: ID-based match ---
+        # Check how many coverage_rows exist for these courses × required keyword IDs
+        id_match_rows = conn.execute(text("""
+            SELECT keyword_id::text, status, course_id::text
             FROM coverage_rows
             WHERE course_id::text = ANY(:cids)
               AND keyword_id::text = ANY(:kw_ids)
         """), {"cids": verified_ids, "kw_ids": list(required_kw_ids)}).fetchall()
 
-        # A keyword is "covered" overall if ANY of the selected courses covers/partials it
+        id_match_count = len(id_match_rows)
+        logger.info(f"Program gap: ID-based match found {id_match_count} coverage rows "
+                    f"for {len(verified_ids)} courses × {len(required_kw_ids)} required keywords")
+
+        # --- Strategy 2: Text-based fallback ---
+        # If ID match gives very low coverage, also try matching by normalized keyword text
+        # Get all coverage_row keywords for these courses
+        course_kw_rows = conn.execute(text("""
+            SELECT cr.keyword_id::text, cr.status, cr.course_id::text,
+                   LOWER(REGEXP_REPLACE(k.text, '[^a-zA-Z0-9]', '', 'g')) as normalized_text,
+                   k.text
+            FROM coverage_rows cr
+            JOIN keywords k ON k.id = cr.keyword_id
+            WHERE cr.course_id::text = ANY(:cids)
+        """), {"cids": verified_ids}).fetchall()
+
+        # Build a map of normalized_text -> best status per (course_id, normalized_text)
+        # to detect text-based matches
+        course_coverage_by_text: Dict[str, Dict[str, str]] = {}  # course_id -> {norm_text -> status}
+        for r in course_kw_rows:
+            cid = r[2]
+            if cid not in course_coverage_by_text:
+                course_coverage_by_text[cid] = {}
+            norm = r[3]
+            existing = course_coverage_by_text[cid].get(norm)
+            # covered > partial > missing
+            status_rank = {"covered": 2, "partial": 1, "missing": 0}
+            if existing is None or status_rank.get(r[1], 0) > status_rank.get(existing, 0):
+                course_coverage_by_text[cid][norm] = r[1]
+
+        # For each required keyword, resolve what's covered via text match per course
+        # (use this as supplement/fallback to ID matching)
+        # Build: for each (course_id, keyword_id) → status (via ID or text match)
+        coverage_by_course_kw: Dict[str, Dict[str, str]] = {cid: {} for cid in verified_ids}
+
+        # First populate from ID-based matches
+        for r in id_match_rows:
+            kid, status, cid = r[0], r[1], r[2]
+            existing = coverage_by_course_kw[cid].get(kid)
+            status_rank = {"covered": 2, "partial": 1, "missing": 0}
+            if existing is None or status_rank.get(status, 0) > status_rank.get(existing, 0):
+                coverage_by_course_kw[cid][kid] = status
+
+        # Then fill gaps via text-based match
+        text_match_additions = 0
+        for kid, kw_info in kw_map.items():
+            norm_text = kw_info["text"].lower()
+            norm_text_stripped = ''.join(c for c in norm_text if c.isalnum())
+            for cid in verified_ids:
+                if kid not in coverage_by_course_kw[cid]:
+                    # Try text lookup
+                    status = course_coverage_by_text.get(cid, {}).get(norm_text_stripped)
+                    if status and status in ("covered", "partial"):
+                        coverage_by_course_kw[cid][kid] = status
+                        text_match_additions += 1
+
+        if text_match_additions > 0:
+            logger.info(f"Program gap: text-based fallback added {text_match_additions} additional matches")
+
+        # --- Compute overall coverage ---
         covered_overall: set = set()
-        for r in all_cr_rows:
-            if r[1] in ("covered", "partial"):
-                covered_overall.add(r[0])
+        for cid in verified_ids:
+            for kid, status in coverage_by_course_kw[cid].items():
+                if status in ("covered", "partial"):
+                    covered_overall.add(kid)
 
         missing_overall = required_kw_ids - covered_overall
 
-        # Per-course breakdown
+        # --- Per-course breakdown ---
         per_course = []
         for course_row in verified:
             cid = course_row[0]
-            cr_rows = conn.execute(text("""
-                SELECT keyword_id::text, status
-                FROM coverage_rows
-                WHERE course_id = :cid
-                  AND keyword_id::text = ANY(:kw_ids)
-            """), {"cid": cid, "kw_ids": list(required_kw_ids)}).fetchall()
-
-            c_covered = {r[0] for r in cr_rows if r[1] in ("covered", "partial")}
+            c_covered = {
+                kid for kid, status in coverage_by_course_kw[cid].items()
+                if status in ("covered", "partial")
+            }
             c_pct = round(len(c_covered) / max(len(required_kw_ids), 1) * 100, 1)
 
             per_course.append({
@@ -401,13 +460,15 @@ def get_program_gap_analysis(
                 ],
             })
 
-        # ── FIX: sort missing keywords by frequency using the id-keyed map ──
+        # Sort missing keywords by frequency
         missing_kw_texts = [
             {"text": kw_map[kid]["text"], "frequency": kw_map[kid]["frequency"]}
             for kid in missing_overall
             if kid in kw_map
         ]
         missing_kw_texts.sort(key=lambda x: -x["frequency"])
+
+        match_method = "id+text" if text_match_additions > 0 else "id"
 
         return {
             "job_role": job_role,
@@ -422,6 +483,10 @@ def get_program_gap_analysis(
             ),
             "missing_keywords": [k["text"] for k in missing_kw_texts],
             "per_course_breakdown": sorted(per_course, key=lambda x: -x["coverage_pct"]),
+            "_debug": {
+                "id_match_rows": id_match_count,
+                "text_match_additions": text_match_additions,
+                "match_method": match_method,
+            }
         }
-    
     

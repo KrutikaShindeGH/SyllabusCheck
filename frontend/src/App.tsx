@@ -11,11 +11,11 @@ import JobExplorer    from './pages/JobExplorer'
 import CoverageMatrix from './pages/CoverageMatrix'
 import GapAnalysis    from './pages/GapAnalysis'
 import Reports        from './pages/Reports'
-import ProgramGapAnalysis   from './pages/ProgramGapAnalysis'
+import ProgramGapAnalysis from './pages/ProgramGapAnalysis'
+import ProgramReport  from './pages/ProgramReport'
 
 
 // ── Handle Google OAuth redirect synchronously before React renders ───────────
-// Backend redirects to: /?access_token=...&refresh_token=...&email=...&name=...
 const _params = new URLSearchParams(window.location.search)
 const _oauthToken   = _params.get('access_token')
 const _refreshToken = _params.get('refresh_token')
@@ -25,7 +25,6 @@ const _oauthName    = _params.get('name')
 if (_oauthToken) {
   localStorage.setItem('access_token',  _oauthToken)
   if (_refreshToken) localStorage.setItem('refresh_token', _refreshToken)
-  // Clean the URL — redirect to /dashboard so ProtectedApp loads directly
   window.history.replaceState({}, document.title, '/dashboard')
 }
 // ─────────────────────────────────────────────────────────────────────────────
@@ -35,9 +34,7 @@ function ProtectedApp() {
   const navigate   = useNavigate()
   const hasFetched = useRef(false)
 
-  // Read token directly from localStorage — avoids Zustand hydration race
   const token = useAuthStore(state => state.token)
-
 
   useEffect(() => {
     if (hasFetched.current) return
@@ -53,8 +50,6 @@ function ProtectedApp() {
         useAuthStore.setState({ user: r.data, token })
       })
       .catch(() => {
-        // /auth/me failed — if we have OAuth params in memory, build a minimal user
-        // so the app doesn't boot-loop on the very first OAuth load
         if (_oauthEmail) {
           useAuthStore.setState({
             token,
@@ -72,14 +67,15 @@ function ProtectedApp() {
   return (
     <Layout>
       <Routes>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/syllabi"   element={<Syllabi />} />
-        <Route path="/jobs"      element={<JobExplorer />} />
-        <Route path="/coverage"  element={<CoverageMatrix />} />
-        <Route path="/gaps"      element={<GapAnalysis />} />
-        <Route path="/reports"   element={<Reports />} />
+        <Route path="/dashboard"     element={<Dashboard />} />
+        <Route path="/syllabi"       element={<Syllabi />} />
+        <Route path="/jobs"          element={<JobExplorer />} />
+        <Route path="/coverage"      element={<CoverageMatrix />} />
+        <Route path="/gaps"          element={<GapAnalysis />} />
+        <Route path="/reports"       element={<Reports />} />
         <Route path="/program-gap"   element={<ProgramGapAnalysis />} />
-        <Route path="*"          element={<Navigate to="/dashboard" replace />} />
+        <Route path="/program-report" element={<ProgramReport />} />
+        <Route path="*"              element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </Layout>
   )

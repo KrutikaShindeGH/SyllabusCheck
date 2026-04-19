@@ -2,13 +2,14 @@ import { useAuthStore } from '../store/authStore'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 const nav = [
-  { path: '/dashboard',  label: 'Dashboard',     icon: '▦' },
-  { path: '/syllabi',    label: 'Syllabi',        icon: '📄' },
-  { path: '/jobs',       label: 'Job Explorer',   icon: '💼' },
-  { path: '/coverage',   label: 'Coverage Matrix',icon: '🔥' },
-  { path: '/gaps',       label: 'Gap Analysis',   icon: '⚡' },
-  { path: '/program-gap', label: 'Program Gap',   icon: '🎯' },
-  { path: '/reports',    label: 'Reports',        icon: '📊' },
+  { path: '/dashboard',       label: 'Dashboard',       icon: '▦' },
+  { path: '/syllabi',         label: 'Syllabi',          icon: '📄' },
+  { path: '/jobs',            label: 'Job Explorer',     icon: '💼' },
+  { path: '/coverage',        label: 'Coverage Matrix',  icon: '🔥' },
+  { path: '/gaps',            label: 'Gap Analysis',     icon: '⚡' },
+  { path: '/program-gap',     label: 'Program Gap',      icon: '🎯' },
+  { path: '/program-report',  label: 'Program Report',   icon: '📋' },
+  { path: '/reports',         label: 'Reports',          icon: '📊' },
 ]
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -32,7 +33,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-0.5">
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           {nav.map(item => (
             <button
               key={item.path}
