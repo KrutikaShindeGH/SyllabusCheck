@@ -60,6 +60,7 @@ def save_jobs(jobs: list[dict]) -> int:
         return 0
 
     saved = 0
+    new_job_ids = []                                    # ← ADD THIS LINE
     with Session(sync_engine) as db:
         for job in jobs:
             source  = job.get("source", "unknown")
@@ -98,9 +99,18 @@ def save_jobs(jobs: list[dict]) -> int:
                 scraped_at=job.get("scraped_at", datetime.utcnow()),
             )
             db.add(posting)
+            db.flush()                                  # ← ADD THIS LINE (gets ID before commit)
+            new_job_ids.append(str(posting.id))         # ← ADD THIS LINE
             saved += 1
 
         db.commit()
+
+    # ← ADD THESE 5 LINES
+    if new_job_ids:
+        from tasks.nlp_tasks import extract_job_keywords
+        for job_id in new_job_ids:
+            extract_job_keywords.delay(job_id)
+        print(f"Queued keyword extraction for {len(new_job_ids)} new jobs")
 
     return saved
 
