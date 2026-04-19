@@ -141,3 +141,8 @@ async def trigger_scrape(
         task = scrape_all_boards.delay()
         return ScrapeResponse(message="Scraping all sources", task_id=task.id)
     
+@router.post("/admin/trigger-keyword-extraction")
+async def trigger_keyword_extraction():
+    from tasks.nlp_tasks import extract_all_job_keywords
+    result = extract_all_job_keywords.delay(batch_size=50, limit=5000)
+    return {"task_id": str(result.id), "status": "queued"}
