@@ -56,5 +56,9 @@ celery_app.conf.beat_schedule = {
         "task": "tasks.coverage_tasks.recompute_all_coverage",
         "schedule": crontab(hour=5, minute=0),
     },
+    "extract-job-keywords-daily": {
+        "task": "tasks.nlp_tasks.extract_all_job_keywords",
+        "schedule": crontab(hour=2, minute=30),
+    },
 }
 
