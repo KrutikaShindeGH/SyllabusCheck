@@ -6,6 +6,7 @@ import httpx
 import re
 from bs4 import BeautifulSoup
 from datetime import datetime
+import random 
 
 
 GITHUB_SOURCES = [
@@ -214,7 +215,7 @@ def parse_markdown_table(text: str) -> list[dict]:
     return jobs
 
 
-async def scrape_github_sources() -> list[dict]:
+async def scrape_github_sources(max_per_source: int = 10) -> list[dict]:
     """Fetch and parse all GitHub job sources."""
     all_jobs = []
 
@@ -231,6 +232,10 @@ async def scrape_github_sources() -> list[dict]:
                     jobs = parse_html_table(response.text)
                 else:
                     jobs = parse_markdown_table(response.text)
+
+                # Randomly sample for variety across scrapes  ← ADD
+                if len(jobs) > max_per_source:                 # ← ADD
+                    jobs = random.sample(jobs, max_per_source) # ← ADD
 
                 for job in jobs:
                     job["source"] = source["source"]

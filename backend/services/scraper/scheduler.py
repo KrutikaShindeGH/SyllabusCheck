@@ -141,6 +141,11 @@ async def run_all_scrapers(max_per_source: int = 100) -> dict:
     arbeitnow_jobs = await scrape_arbeitnow(max_results=max_per_source)
     summary["arbeitnow"] = save_jobs(arbeitnow_jobs)
 
+    # ── Adzuna (free, location-specific, full-time jobs)  ← ADD
+    from services.scraper.adzuna_scraper import scrape_adzuna             # ← ADD
+    adzuna_jobs = await scrape_adzuna(max_per_query=10)                   # ← ADD
+    summary["adzuna"] = save_jobs(adzuna_jobs) 
+
     # ── JSearch API — 1 role × 1 location per dept to save budget ─────────────
     if settings.RAPIDAPI_KEY:
         jsearch_jobs = await scrape_jsearch(

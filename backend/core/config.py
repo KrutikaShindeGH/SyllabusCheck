@@ -52,6 +52,8 @@ class Settings(BaseSettings):
 
     # ── Scraping ───────────────────────────────────────────────────────
     RAPIDAPI_KEY: str = ""
+    ADZUNA_APP_ID: str = ""
+    ADZUNA_APP_KEY: str = ""
     SCRAPE_INTERVAL_HOURS: int = 24
     MAX_JOBS_PER_SOURCE: int = 500
     PLAYWRIGHT_HEADLESS: bool = True
