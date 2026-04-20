@@ -237,6 +237,170 @@ function KeywordPills({ keywords, covered }: { keywords: string[]; covered: bool
   );
 }
 
+// ─── Academic PDF Generator ───────────────────────────────────────────────────
+function generateAcademicPDF(result: GapResult, selectedCourses: Course[]) {
+  const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const pct  = result.total_required_keywords
+    ? Math.round(result.total_covered / result.total_required_keywords * 100) : 0;
+
+  const courseRows = result.per_course_breakdown.map((c, i) =>
+    `<tr>
+      <td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;">${i+1}. ${c.course_name}</td>
+      <td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">${c.domain}</td>
+      <td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">${c.covered_count}</td>
+      <td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">${c.total_required}</td>
+      <td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;text-align:center;font-weight:600;color:${pctColor(c.coverage_pct)}">${c.coverage_pct}%</td>
+    </tr>`
+  ).join('');
+
+  const kwGrid = (kws: string[], color: string, bg: string, border: string) =>
+    kws.map((k) =>
+      `<span style="display:inline-block;margin:2px 3px;padding:3px 10px;background:${bg};color:${color};border:1px solid ${border};border-radius:20px;font-size:10px;font-family:'Georgia',serif;">${k}</span>`
+    ).join('');
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Georgia', 'Times New Roman', serif; font-size: 11pt; line-height: 1.6; color: #1a1a2e; background: #fff; }
+  .page { max-width: 800px; margin: 0 auto; padding: 60px 72px; }
+  .report-header { border-bottom: 3px double #1a1a2e; padding-bottom: 20px; margin-bottom: 28px; }
+  .institution { font-size: 9pt; letter-spacing: 3px; text-transform: uppercase; color: #6b7280; margin-bottom: 8px; }
+  .report-title { font-size: 22pt; font-weight: bold; color: #1a1a2e; line-height: 1.2; margin-bottom: 6px; }
+  .report-subtitle { font-size: 12pt; color: #4b5563; font-style: italic; }
+  .report-meta { margin-top: 14px; font-size: 9pt; color: #6b7280; display: flex; gap: 24px; }
+  h2 { font-size: 13pt; font-weight: bold; color: #1a1a2e; letter-spacing: 0.5px; text-transform: uppercase; border-bottom: 1px solid #d1d5db; padding-bottom: 6px; margin: 28px 0 14px; }
+  h3 { font-size: 11pt; font-weight: bold; color: #374151; margin: 18px 0 8px; }
+  .summary-box { background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #1a1a2e; padding: 18px 22px; margin-bottom: 24px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .summary-stat { text-align: center; }
+  .summary-stat .value { font-size: 24pt; font-weight: bold; color: #1a1a2e; line-height: 1; display: block; }
+  .summary-stat .label { font-size: 8pt; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; display: block; }
+  .summary-stat.highlight .value { color: #C75B12; }
+  .summary-stat.green .value { color: #059669; }
+  .summary-stat.red .value { color: #dc2626; }
+  table { width: 100%; border-collapse: collapse; font-size: 10pt; margin-bottom: 16px; }
+  thead tr { background: #1a1a2e; color: white; }
+  thead th { padding: 8px 12px; text-align: left; font-size: 9pt; letter-spacing: 0.5px; font-weight: 600; }
+  thead th:not(:first-child) { text-align: center; }
+  tbody tr:last-child td { border-bottom: 2px solid #1a1a2e; }
+  .keyword-section { margin-bottom: 20px; }
+  .keyword-section p { font-size: 9.5pt; color: #4b5563; margin-bottom: 10px; font-style: italic; }
+  .footer { margin-top: 40px; padding-top: 14px; border-top: 2px solid #1a1a2e; font-size: 8.5pt; color: #9ca3af; display: flex; justify-content: space-between; font-style: italic; }
+  .page-break { page-break-before: always; }
+  .methodology { background: #fffbeb; border: 1px solid #fde68a; padding: 14px 18px; font-size: 9.5pt; color: #78350f; margin-bottom: 20px; line-height: 1.5; }
+  .methodology strong { display: block; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="report-header">
+    <div class="institution">SyllabusCheck · Curriculum Analytics Platform</div>
+    <div class="report-title">Program Curriculum Gap Analysis</div>
+    <div class="report-subtitle">Target Role: ${result.job_role}</div>
+    <div class="report-meta">
+      <span>📅 Generated: ${date}</span>
+      <span>📊 Based on ${result.jobs_matched} job postings</span>
+      <span>📚 ${selectedCourses.length} syllab${selectedCourses.length === 1 ? 'us' : 'i'} analyzed</span>
+    </div>
+  </div>
+
+  <h2>Executive Summary</h2>
+  <div class="summary-box">
+    <div class="summary-stat highlight"><span class="value">${pct}%</span><span class="label">Overall Coverage</span></div>
+    <div class="summary-stat"><span class="value">${result.total_required_keywords}</span><span class="label">Required Skills</span></div>
+    <div class="summary-stat green"><span class="value">${result.total_covered}</span><span class="label">Skills Covered</span></div>
+    <div class="summary-stat red"><span class="value">${result.missing_keywords.length}</span><span class="label">Skills Missing</span></div>
+  </div>
+  <p style="font-size:10pt;color:#374151;margin-bottom:20px;line-height:1.7;">
+    This report analyzes the alignment between the selected curriculum and the skill requirements
+    extracted from <strong>${result.jobs_matched} job postings</strong> for the role of
+    <strong>${result.job_role}</strong>. The program collectively covers
+    <strong>${result.total_covered} of ${result.total_required_keywords}</strong> required skills
+    (${pct}% coverage), with <strong>${result.missing_keywords.length} skills</strong> currently absent from the curriculum.
+  </p>
+  <div class="methodology">
+    <strong>Methodology Note</strong>
+    Skills were extracted from job postings using NLP analysis (Claude Haiku). Coverage was determined
+    via semantic similarity matching between syllabus topics and job-required keywords
+    (cosine similarity threshold ≥ 0.75 for "covered", ≥ 0.50 for "partial").
+    Keywords are ranked by frequency across job postings.
+  </div>
+
+  <h2>Per-Syllabus Coverage Breakdown</h2>
+  <table>
+    <thead><tr><th>Syllabus</th><th>Domain</th><th>Covered</th><th>Required</th><th>Coverage %</th></tr></thead>
+    <tbody>${courseRows}</tbody>
+  </table>
+
+  <h2>Coverage Funnel Analysis</h2>
+  <table style="width:60%;margin-bottom:20px;">
+    <thead><tr><th>Stage</th><th>Count</th><th>Percentage</th></tr></thead>
+    <tbody>
+      <tr><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;">Required by Job Role</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;text-align:center;font-weight:600;">${result.total_required_keywords}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">100%</td></tr>
+      <tr><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;">Covered by Program</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;text-align:center;font-weight:600;color:#059669;">${result.total_covered}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;text-align:center;color:#059669;">${pct}%</td></tr>
+      <tr><td style="padding:6px 12px;border-bottom:2px solid #1a1a2e;">Gap (Missing)</td><td style="padding:6px 12px;border-bottom:2px solid #1a1a2e;text-align:center;font-weight:600;color:#dc2626;">${result.missing_keywords.length}</td><td style="padding:6px 12px;border-bottom:2px solid #1a1a2e;text-align:center;color:#dc2626;">${result.total_required_keywords ? Math.round(result.missing_keywords.length/result.total_required_keywords*100) : 0}%</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-break"></div>
+  <h2>Missing Skills (${result.missing_keywords.length} skills)</h2>
+  <div class="keyword-section">
+    <p>Skills required for <em>${result.job_role}</em> roles not currently addressed in any selected syllabus. Sorted by frequency across job postings (most critical first).</p>
+    <div>${kwGrid(result.missing_keywords.slice(0, 80), '#991b1b', '#fff1f2', '#fecaca')}</div>
+  </div>
+
+  <h2>Covered Skills (${result.covered_keywords.length} skills)</h2>
+  <div class="keyword-section">
+    <p>Skills required for <em>${result.job_role}</em> roles already addressed within the selected curriculum.</p>
+    <div>${kwGrid(result.covered_keywords, '#065f46', '#ecfdf5', '#a7f3d0')}</div>
+  </div>
+
+  <div class="page-break"></div>
+  <h2>Curriculum Recommendations</h2>
+  <h3>High-Priority Additions (Top 10 Missing Skills)</h3>
+  <p style="font-size:10pt;color:#374151;margin-bottom:12px;line-height:1.7;">
+    The following skills appear most frequently in <strong>${result.job_role}</strong> job postings and represent the highest-impact gaps:
+  </p>
+  <ol style="padding-left:20px;font-size:10pt;color:#374151;line-height:2;">
+    ${result.missing_keywords.slice(0, 10).map((k: string) => `<li><strong>${k}</strong></li>`).join('')}
+  </ol>
+
+  <h3>Strengths to Highlight</h3>
+  <p style="font-size:10pt;color:#374151;margin-bottom:12px;line-height:1.7;">
+    The curriculum demonstrates strong coverage in the following areas relevant to <strong>${result.job_role}</strong>:
+  </p>
+  <ul style="padding-left:20px;font-size:10pt;color:#374151;line-height:2;">
+    ${result.covered_keywords.slice(0, 8).map((k: string) => `<li>${k}</li>`).join('')}
+  </ul>
+
+  <h2>Analyzed Syllabi</h2>
+  <ol style="padding-left:20px;font-size:10pt;color:#374151;line-height:2;">
+    ${selectedCourses.map((c: Course) =>
+      `<li><strong>${c.title}</strong>${c.domain ? ` — <em>${c.domain}</em>` : ''}${c.coverage_score != null ? ` (individual coverage: ${c.coverage_score.toFixed(0)}%)` : ''}</li>`
+    ).join('')}
+  </ol>
+
+  <div class="footer">
+    <span>SyllabusCheck · Program Gap Analysis Report</span>
+    <span>${date}</span>
+    <span>Confidential — For Academic Use Only</span>
+  </div>
+</div>
+</body>
+</html>`;
+
+  const blob = new Blob([html], { type: 'text/html' });
+  const url  = URL.createObjectURL(blob);
+  const win  = window.open(url, '_blank');
+  if (win) {
+    win.onload = () => {
+      setTimeout(() => { win.print(); URL.revokeObjectURL(url); }, 500);
+    };
+  }
+}
+
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 export default function ProgramReport() {
   const [allCourses, setAllCourses]   = useState<Course[]>([]);
@@ -247,7 +411,6 @@ export default function ProgramReport() {
   const [loading, setLoading]         = useState(false);
   const [error, setError]             = useState<string | null>(null);
   const [tab, setTab]                 = useState<'overview'|'heatmap'|'keywords'>('overview');
-  const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     api.get<Course[]>('/courses/').then(r => setAllCourses(r.data));
@@ -280,16 +443,9 @@ export default function ProgramReport() {
     } finally { setLoading(false); }
   };
 
-  const handleExportPdf = async () => {
-    if (!reportRef.current) return;
-    // @ts-ignore
-    const html2pdf = (await import('html2pdf.js')).default;
-    await html2pdf().set({
-      margin: [8, 8, 8, 8], filename: `program_report_${jobRole.replace(/\s+/g, '_')}.pdf`,
-      image: { type: 'jpeg', quality: 0.97 },
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    }).from(reportRef.current).save();
+  const handleExportPdf = () => {
+    if (!result) return;
+    generateAcademicPDF(result, selectedCourses);
   };
 
   const selectedCourses = allCourses.filter(c => selectedIds.has(c.id));
@@ -426,7 +582,7 @@ export default function ProgramReport() {
 
       {/* ══════════════ REPORT OUTPUT ══════════════ */}
       {result && (
-        <div ref={reportRef} className="space-y-5">
+        <div className="space-y-5">
 
           {result.warning && (
             <div className="bg-amber-50 border border-amber-200 text-amber-700 rounded-xl px-4 py-3 text-sm">
