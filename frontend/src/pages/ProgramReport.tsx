@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '../lib/api';
 
+// ─── Data Types ───────────────────────────────────────────────────────────────
 interface Course {
   id: string;
   title: string;
@@ -903,7 +904,7 @@ export default function ProgramReport() {
                 {[
                   ['🍩', 'Coverage Donut',    'Covered vs missing at a glance'],
                   ['📉', 'Coverage Funnel',   'Required → covered → gap waterfall'],
-                  ['🌐', 'Polar Contribution','Each syllabuss share, radially'],
+                  ['🌐', 'Polar Contribution','Each syllabuss share, radially'],  
                   ['🔲', 'Skill Heatmap',     'Top skills × every course matrix'],
                   ['🏷️', 'Keyword Bubbles',  'Missing & covered skills visually'],
                   ['📊', 'Bar Ranking',       'All syllabi ranked by coverage %'],
