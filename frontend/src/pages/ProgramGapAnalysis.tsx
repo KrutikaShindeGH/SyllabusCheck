@@ -1,13 +1,6 @@
-/**
- * ProgramReport.tsx
- * Curriculum Gap Analysis — Program-wide report view
- * Updated: 2026-04-20
- */
-
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import api from '../lib/api';
 
-// ─── Data Types ───────────────────────────────────────────────────────────────
 interface Course {
   id: string;
   title: string;
@@ -185,16 +178,15 @@ function SkillHeatmap({ breakdown, allMissing, allCovered }:
             const isMissing = topMissing.includes(skill);
             const isSection = si === topMissing.length;
             return (
-              // Fixed: use React.Fragment with explicit key instead of shorthand
-              <React.Fragment key={skill}>
+              <>
                 {isSection && (
-                  <tr>
+                  <tr key="divider">
                     <td colSpan={breakdown.length + 1}>
                       <div className="my-1.5 border-t border-dashed border-gray-200" />
                     </td>
                   </tr>
                 )}
-                <tr className={si % 2 === 0 ? 'bg-gray-50/60' : ''}>
+                <tr key={skill} className={si % 2 === 0 ? 'bg-gray-50/60' : ''}>
                   <td className="py-0.5 pr-3">
                     <span className={`font-medium truncate block max-w-[120px] ${isMissing ? 'text-red-600' : 'text-emerald-700'}`}>
                       {isMissing ? '✕' : '✓'} {skill}
@@ -211,7 +203,7 @@ function SkillHeatmap({ breakdown, allMissing, allCovered }:
                     );
                   })}
                 </tr>
-              </React.Fragment>
+              </>
             );
           })}
         </tbody>
@@ -814,10 +806,7 @@ export default function ProgramReport() {
           </p>
         </div>
         {result && (
-          <button
-            onClick={handleExportPdf}
-            title="Export this report as a printable PDF"
-            aria-label="Export report as PDF"
+          <button onClick={handleExportPdf}
             className="flex items-center gap-2 px-4 py-2 bg-[#1C1C1C] text-white rounded-xl text-sm font-medium hover:bg-black transition">
             ↓ Export PDF
           </button>
@@ -914,7 +903,7 @@ export default function ProgramReport() {
                 {[
                   ['🍩', 'Coverage Donut',    'Covered vs missing at a glance'],
                   ['📉', 'Coverage Funnel',   'Required → covered → gap waterfall'],
-                  ['🌐', 'Polar Contribution','Each syllabus share, radially'],
+                  ['🌐', 'Polar Contribution','Each syllabuss share, radially'],
                   ['🔲', 'Skill Heatmap',     'Top skills × every course matrix'],
                   ['🏷️', 'Keyword Bubbles',  'Missing & covered skills visually'],
                   ['📊', 'Bar Ranking',       'All syllabi ranked by coverage %'],
