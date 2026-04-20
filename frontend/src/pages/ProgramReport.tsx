@@ -239,154 +239,480 @@ function KeywordPills({ keywords, covered }: { keywords: string[]; covered: bool
 
 // ─── Academic PDF Generator ───────────────────────────────────────────────────
 function generateAcademicPDF(result: GapResult, selectedCourses: Course[]) {
-  const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const date     = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const semester = (() => {
+    const m = new Date().getMonth();
+    const y = new Date().getFullYear();
+    if (m <= 4) return `Spring ${y}`;
+    if (m <= 7) return `Summer ${y}`;
+    return `Fall ${y}`;
+  })();
   const pct  = result.total_required_keywords
     ? Math.round(result.total_covered / result.total_required_keywords * 100) : 0;
+  const gapPct = result.total_required_keywords
+    ? Math.round(result.missing_keywords.length / result.total_required_keywords * 100) : 0;
 
-  const courseRows = result.per_course_breakdown.map((c, i) =>
-    `<tr>
-      <td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;">${i+1}. ${c.course_name}</td>
-      <td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">${c.domain}</td>
-      <td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">${c.covered_count}</td>
-      <td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">${c.total_required}</td>
-      <td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;text-align:center;font-weight:600;color:${pctColor(c.coverage_pct)}">${c.coverage_pct}%</td>
+  // Determine coverage rating label
+  const rating = pct >= 75 ? 'Strong' : pct >= 50 ? 'Moderate' : pct >= 25 ? 'Developing' : 'Critical Gap';
+  const ratingColor = pct >= 75 ? '#065f46' : pct >= 50 ? '#92400e' : pct >= 25 ? '#1e40af' : '#7f1d1d';
+
+  const courseRows = result.per_course_breakdown.map((c, i) => {
+    const barWidth = Math.round(c.coverage_pct);
+    const barColor = c.coverage_pct >= 70 ? '#059669' : c.coverage_pct >= 40 ? '#d97706' : '#dc2626';
+    return `<tr style="background:${i % 2 === 0 ? '#fff' : '#f9fafb'};">
+      <td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;font-family:'Times New Roman',serif;">${i+1}. ${c.course_name}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;text-align:center;font-size:9pt;color:#6b7280;">${c.domain || '—'}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;text-align:center;color:#059669;font-weight:700;">${c.covered_count}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;text-align:center;">${c.total_required}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="flex:1;background:#e5e7eb;border-radius:3px;height:5px;">
+            <div style="width:${barWidth}%;background:${barColor};height:5px;border-radius:3px;"></div>
+          </div>
+          <span style="font-weight:700;color:${barColor};font-size:9pt;white-space:nowrap;">${c.coverage_pct}%</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const kwPill = (k: string, color: string, bg: string, border: string) =>
+    `<span style="display:inline-block;margin:2px 3px;padding:3px 11px;background:${bg};color:${color};border:1px solid ${border};border-radius:3px;font-size:9.5pt;font-family:'Times New Roman',serif;letter-spacing:0.2px;">${k}</span>`;
+
+  const kwSection = (kws: string[], color: string, bg: string, border: string) =>
+    kws.map(k => kwPill(k, color, bg, border)).join('');
+
+  const topMissingRows = result.missing_keywords.slice(0, 15).map((k, i) =>
+    `<tr style="background:${i % 2 === 0 ? '#fff' : '#fef2f2'};">
+      <td style="padding:5px 10px;border-bottom:1px solid #fecaca;font-weight:600;color:#7f1d1d;width:24px;">${i+1}.</td>
+      <td style="padding:5px 10px;border-bottom:1px solid #fecaca;font-family:'Times New Roman',serif;">${k}</td>
+      <td style="padding:5px 10px;border-bottom:1px solid #fecaca;font-size:8.5pt;color:#6b7280;font-style:italic;">Not covered in any selected syllabus</td>
     </tr>`
   ).join('');
 
-  const kwGrid = (kws: string[], color: string, bg: string, border: string) =>
-    kws.map((k) =>
-      `<span style="display:inline-block;margin:2px 3px;padding:3px 10px;background:${bg};color:${color};border:1px solid ${border};border-radius:20px;font-size:10px;font-family:'Georgia',serif;">${k}</span>`
-    ).join('');
-
   const html = `<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8"/>
+<title>UTD Curriculum Gap Report — ${result.job_role} — ${date}</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Georgia', 'Times New Roman', serif; font-size: 11pt; line-height: 1.6; color: #1a1a2e; background: #fff; }
-  .page { max-width: 800px; margin: 0 auto; padding: 60px 72px; }
-  .report-header { border-bottom: 3px double #1a1a2e; padding-bottom: 20px; margin-bottom: 28px; }
-  .institution { font-size: 9pt; letter-spacing: 3px; text-transform: uppercase; color: #6b7280; margin-bottom: 8px; }
-  .report-title { font-size: 22pt; font-weight: bold; color: #1a1a2e; line-height: 1.2; margin-bottom: 6px; }
-  .report-subtitle { font-size: 12pt; color: #4b5563; font-style: italic; }
-  .report-meta { margin-top: 14px; font-size: 9pt; color: #6b7280; display: flex; gap: 24px; }
-  h2 { font-size: 13pt; font-weight: bold; color: #1a1a2e; letter-spacing: 0.5px; text-transform: uppercase; border-bottom: 1px solid #d1d5db; padding-bottom: 6px; margin: 28px 0 14px; }
-  h3 { font-size: 11pt; font-weight: bold; color: #374151; margin: 18px 0 8px; }
-  .summary-box { background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #1a1a2e; padding: 18px 22px; margin-bottom: 24px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-  .summary-stat { text-align: center; }
-  .summary-stat .value { font-size: 24pt; font-weight: bold; color: #1a1a2e; line-height: 1; display: block; }
-  .summary-stat .label { font-size: 8pt; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; display: block; }
-  .summary-stat.highlight .value { color: #C75B12; }
-  .summary-stat.green .value { color: #059669; }
-  .summary-stat.red .value { color: #dc2626; }
-  table { width: 100%; border-collapse: collapse; font-size: 10pt; margin-bottom: 16px; }
-  thead tr { background: #1a1a2e; color: white; }
-  thead th { padding: 8px 12px; text-align: left; font-size: 9pt; letter-spacing: 0.5px; font-weight: 600; }
-  thead th:not(:first-child) { text-align: center; }
-  tbody tr:last-child td { border-bottom: 2px solid #1a1a2e; }
-  .keyword-section { margin-bottom: 20px; }
-  .keyword-section p { font-size: 9.5pt; color: #4b5563; margin-bottom: 10px; font-style: italic; }
-  .footer { margin-top: 40px; padding-top: 14px; border-top: 2px solid #1a1a2e; font-size: 8.5pt; color: #9ca3af; display: flex; justify-content: space-between; font-style: italic; }
+  body {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 11pt;
+    line-height: 1.65;
+    color: #111;
+    background: #fff;
+  }
+  .page { max-width: 760px; margin: 0 auto; padding: 64px 80px; }
+
+  /* ── UTD Header ── */
+  .utd-header {
+    text-align: center;
+    padding-bottom: 22px;
+    margin-bottom: 28px;
+    border-bottom: 2.5px solid #154360;
+  }
+  .utd-seal-line {
+    font-size: 8.5pt;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #154360;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .utd-university {
+    font-size: 16pt;
+    font-weight: 700;
+    color: #154360;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+  .utd-school {
+    font-size: 10pt;
+    color: #2c6e9e;
+    font-style: italic;
+    margin-bottom: 16px;
+  }
+  .report-type-badge {
+    display: inline-block;
+    background: #154360;
+    color: #fff;
+    font-size: 8pt;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 3px 14px;
+    margin-bottom: 12px;
+  }
+  .report-title {
+    font-size: 19pt;
+    font-weight: 700;
+    color: #111;
+    line-height: 1.25;
+    margin-bottom: 5px;
+  }
+  .report-subtitle {
+    font-size: 12pt;
+    color: #374151;
+    font-style: italic;
+    margin-bottom: 14px;
+  }
+  .report-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border: 1px solid #d1d5db;
+    margin-top: 16px;
+    font-size: 9pt;
+  }
+  .meta-cell {
+    padding: 7px 14px;
+    border-right: 1px solid #d1d5db;
+    color: #374151;
+  }
+  .meta-cell:last-child { border-right: none; }
+  .meta-cell .meta-label { font-weight: 700; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 1px; color: #6b7280; display: block; margin-bottom: 2px; }
+  .meta-cell .meta-value { font-size: 10pt; color: #111; font-weight: 600; }
+
+  /* ── Section headings ── */
+  h2 {
+    font-size: 12pt;
+    font-weight: 700;
+    color: #154360;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    border-bottom: 1.5px solid #154360;
+    padding-bottom: 5px;
+    margin: 30px 0 14px;
+  }
+  h3 {
+    font-size: 11pt;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 18px 0 8px;
+    font-style: italic;
+  }
+
+  /* ── Executive Summary box ── */
+  .exec-summary {
+    border: 1.5px solid #154360;
+    margin-bottom: 20px;
+    page-break-inside: avoid;
+  }
+  .exec-summary-header {
+    background: #154360;
+    color: #fff;
+    padding: 6px 16px;
+    font-size: 8.5pt;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .exec-summary-body {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+  }
+  .exec-stat {
+    padding: 16px 12px;
+    text-align: center;
+    border-right: 1px solid #e5e7eb;
+  }
+  .exec-stat:last-child { border-right: none; }
+  .exec-stat .stat-value { font-size: 26pt; font-weight: 700; line-height: 1; display: block; }
+  .exec-stat .stat-label { font-size: 7.5pt; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; display: block; }
+  .rating-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 2px;
+    font-size: 8pt;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+
+  /* ── Tables ── */
+  table { width: 100%; border-collapse: collapse; font-size: 10pt; margin-bottom: 18px; }
+  .tbl-header tr { background: #154360; color: #fff; }
+  .tbl-header th { padding: 8px 10px; text-align: left; font-size: 8.5pt; letter-spacing: 0.8px; font-weight: 600; }
+  .tbl-header th:not(:first-child) { text-align: center; }
+  tfoot td { background: #f1f5f9; font-size: 8.5pt; color: #374151; padding: 5px 10px; font-style: italic; border-top: 1.5px solid #154360; }
+
+  /* ── Info / methodology box ── */
+  .info-box {
+    border-left: 3.5px solid #154360;
+    background: #f0f7ff;
+    padding: 12px 16px;
+    font-size: 9.5pt;
+    color: #1e3a5f;
+    margin-bottom: 18px;
+    line-height: 1.6;
+  }
+  .info-box strong { display: block; font-size: 9pt; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; color: #154360; }
+
+  /* ── Interpretation note ── */
+  .interp-box {
+    border: 1px solid #d1d5db;
+    background: #f9fafb;
+    padding: 12px 16px;
+    font-size: 9.5pt;
+    color: #374151;
+    margin-bottom: 18px;
+    line-height: 1.6;
+  }
+
+  /* ── Keywords ── */
+  .kw-block { line-height: 2.2; margin-bottom: 8px; }
+
+  /* ── Priority table ── */
+  .priority-table { width: 100%; border-collapse: collapse; font-size: 10pt; margin-bottom: 16px; }
+  .priority-table thead tr { background: #7f1d1d; color: #fff; }
+  .priority-table thead th { padding: 7px 10px; font-size: 8.5pt; letter-spacing: 0.8px; text-align: left; }
+
+  /* ── Funnel table ── */
+  .funnel-table { width: 55%; }
+
+  /* ── Footer ── */
+  .doc-footer {
+    margin-top: 40px;
+    padding-top: 12px;
+    border-top: 2px solid #154360;
+    font-size: 8pt;
+    color: #6b7280;
+    display: flex;
+    justify-content: space-between;
+    font-style: italic;
+  }
+
+  /* ── Print / page breaks ── */
   .page-break { page-break-before: always; }
-  .methodology { background: #fffbeb; border: 1px solid #fde68a; padding: 14px 18px; font-size: 9.5pt; color: #78350f; margin-bottom: 20px; line-height: 1.5; }
-  .methodology strong { display: block; margin-bottom: 4px; }
+  .no-break { page-break-inside: avoid; }
+
+  @media print {
+    body { font-size: 10.5pt; }
+    .page { padding: 40px 52px; }
+    a { text-decoration: none; color: inherit; }
+  }
 </style>
 </head>
 <body>
 <div class="page">
-  <div class="report-header">
-    <div class="institution">SyllabusCheck · Curriculum Analytics Platform</div>
-    <div class="report-title">Program Curriculum Gap Analysis</div>
-    <div class="report-subtitle">Target Role: ${result.job_role}</div>
-    <div class="report-meta">
-      <span>📅 Generated: ${date}</span>
-      <span>📊 Based on ${result.jobs_matched} job postings</span>
-      <span>📚 ${selectedCourses.length} syllab${selectedCourses.length === 1 ? 'us' : 'i'} analyzed</span>
+
+  <!-- ══ UTD HEADER ══ -->
+  <div class="utd-header">
+    <div class="utd-seal-line">The University of Texas at Dallas</div>
+    <div class="utd-university">The University of Texas at Dallas</div>
+    <div class="utd-school">Office of Academic Programs · Curriculum Analytics Initiative</div>
+    <div class="report-type-badge">Curriculum Gap Analysis Report</div>
+    <div class="report-title">Program Alignment with Industry Job Market</div>
+    <div class="report-subtitle">Target Role: <em>${result.job_role}</em> &nbsp;|&nbsp; ${semester}</div>
+    <div class="report-meta-grid">
+      <div class="meta-cell">
+        <span class="meta-label">Report Generated</span>
+        <span class="meta-value">${date}</span>
+      </div>
+      <div class="meta-cell">
+        <span class="meta-label">Job Postings Analyzed</span>
+        <span class="meta-value">${result.jobs_matched} postings for "${result.job_role}"</span>
+      </div>
+      <div class="meta-cell">
+        <span class="meta-label">Syllabi Included</span>
+        <span class="meta-value">${selectedCourses.length} UTD course syllab${selectedCourses.length === 1 ? 'us' : 'i'}</span>
+      </div>
     </div>
   </div>
 
-  <h2>Executive Summary</h2>
-  <div class="summary-box">
-    <div class="summary-stat highlight"><span class="value">${pct}%</span><span class="label">Overall Coverage</span></div>
-    <div class="summary-stat"><span class="value">${result.total_required_keywords}</span><span class="label">Required Skills</span></div>
-    <div class="summary-stat green"><span class="value">${result.total_covered}</span><span class="label">Skills Covered</span></div>
-    <div class="summary-stat red"><span class="value">${result.missing_keywords.length}</span><span class="label">Skills Missing</span></div>
-  </div>
-  <p style="font-size:10pt;color:#374151;margin-bottom:20px;line-height:1.7;">
-    This report analyzes the alignment between the selected curriculum and the skill requirements
-    extracted from <strong>${result.jobs_matched} job postings</strong> for the role of
-    <strong>${result.job_role}</strong>. The program collectively covers
-    <strong>${result.total_covered} of ${result.total_required_keywords}</strong> required skills
-    (${pct}% coverage), with <strong>${result.missing_keywords.length} skills</strong> currently absent from the curriculum.
-  </p>
-  <div class="methodology">
-    <strong>Methodology Note</strong>
-    Skills were extracted from job postings using NLP analysis (Claude Haiku). Coverage was determined
-    via semantic similarity matching between syllabus topics and job-required keywords
-    (cosine similarity threshold ≥ 0.75 for "covered", ≥ 0.50 for "partial").
-    Keywords are ranked by frequency across job postings.
+  <!-- ══ INTERPRETATION NOTE ══ -->
+  <div class="interp-box">
+    <strong style="font-size:9pt;text-transform:uppercase;letter-spacing:1px;color:#374151;display:block;margin-bottom:4px;">How to Read This Report</strong>
+    This report analyzed <strong>${result.jobs_matched} active job postings</strong> for the role of
+    <strong>${result.job_role}</strong> and extracted <strong>${result.total_required_keywords} unique skills</strong>
+    that employers require for this position. These skills were then matched against the topics covered
+    across the <strong>${selectedCourses.length} selected UTD syllab${selectedCourses.length === 1 ? 'us' : 'i'}</strong>.
+    A skill is marked <em>covered</em> if it appears in at least one syllabus; <em>missing</em> if no syllabus addresses it.
   </div>
 
-  <h2>Per-Syllabus Coverage Breakdown</h2>
-  <table>
-    <thead><tr><th>Syllabus</th><th>Domain</th><th>Covered</th><th>Required</th><th>Coverage %</th></tr></thead>
-    <tbody>${courseRows}</tbody>
+  <!-- ══ EXECUTIVE SUMMARY ══ -->
+  <h2>I. Executive Summary</h2>
+  <div class="exec-summary no-break">
+    <div class="exec-summary-header">Program Coverage at a Glance</div>
+    <div class="exec-summary-body">
+      <div class="exec-stat">
+        <span class="stat-value" style="color:${pct >= 70 ? '#059669' : pct >= 40 ? '#d97706' : '#dc2626'};">${pct}%</span>
+        <span class="stat-label">Overall Coverage</span>
+        <span class="rating-badge" style="background:${ratingColor};color:#fff;">${rating}</span>
+      </div>
+      <div class="exec-stat">
+        <span class="stat-value" style="color:#154360;">${result.total_required_keywords}</span>
+        <span class="stat-label">Unique Skills in<br/>Job Postings</span>
+      </div>
+      <div class="exec-stat">
+        <span class="stat-value" style="color:#059669;">${result.total_covered}</span>
+        <span class="stat-label">Skills Covered<br/>by Program</span>
+      </div>
+      <div class="exec-stat">
+        <span class="stat-value" style="color:#dc2626;">${result.missing_keywords.length}</span>
+        <span class="stat-label">Skills Not in<br/>Any Syllabus</span>
+      </div>
+    </div>
+  </div>
+
+  <p style="font-size:10.5pt;color:#111;margin-bottom:16px;line-height:1.8;text-align:justify;">
+    The selected UTD curriculum collectively addresses <strong>${result.total_covered}</strong> of the
+    <strong>${result.total_required_keywords}</strong> skills identified as requirements across
+    <strong>${result.jobs_matched}</strong> active job postings for <strong>${result.job_role}</strong> roles,
+    yielding an overall program coverage rate of <strong>${pct}%</strong> (Rating: <em>${rating}</em>).
+    The remaining <strong>${result.missing_keywords.length} skills</strong> (${gapPct}%) represent curriculum
+    gaps relative to current market demands and are detailed in Section IV of this report.
+  </p>
+
+  <div class="info-box">
+    <strong>Methodology</strong>
+    Skills were extracted from job postings via NLP keyword analysis (Claude Haiku model).
+    Coverage was determined through semantic similarity matching between syllabus topics and
+    job-required keywords (threshold &ge; 0.75 cosine similarity for &ldquo;covered&rdquo;,
+    &ge; 0.50 for &ldquo;partial&rdquo;). All ${result.total_required_keywords} skills represent
+    unique keywords extracted across ${result.jobs_matched} postings — a skill appearing in
+    multiple postings is counted once but weighted by frequency in gap prioritization.
+  </div>
+
+  <!-- ══ SKILL COVERAGE FUNNEL ══ -->
+  <h2>II. Skill Coverage Funnel</h2>
+  <table class="funnel-table tbl-header no-break">
+    <thead><tr><th style="text-align:left;">Stage</th><th>Count</th><th>Share</th></tr></thead>
+    <tbody>
+      <tr>
+        <td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;">Total skills required by market (${result.jobs_matched} postings)</td>
+        <td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;text-align:center;font-weight:700;">${result.total_required_keywords}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;text-align:center;">100%</td>
+      </tr>
+      <tr style="background:#f0fdf4;">
+        <td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;">Covered by program (≥1 syllabus)</td>
+        <td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;text-align:center;font-weight:700;color:#059669;">${result.total_covered}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;text-align:center;color:#059669;font-weight:600;">${pct}%</td>
+      </tr>
+      <tr style="background:#fef2f2;">
+        <td style="padding:7px 10px;border-bottom:2px solid #154360;">Not covered in any syllabus (curriculum gap)</td>
+        <td style="padding:7px 10px;border-bottom:2px solid #154360;text-align:center;font-weight:700;color:#dc2626;">${result.missing_keywords.length}</td>
+        <td style="padding:7px 10px;border-bottom:2px solid #154360;text-align:center;color:#dc2626;font-weight:600;">${gapPct}%</td>
+      </tr>
+    </tbody>
+    <tfoot><tr><td colspan="3">Skills extracted from ${result.jobs_matched} job postings for "${result.job_role}" via automated NLP analysis. Figures reflect unique skills, not cumulative mentions.</td></tr></tfoot>
   </table>
 
-  <h2>Coverage Funnel Analysis</h2>
-  <table style="width:60%;margin-bottom:20px;">
-    <thead><tr><th>Stage</th><th>Count</th><th>Percentage</th></tr></thead>
+  <!-- ══ PER-SYLLABUS BREAKDOWN ══ -->
+  <h2>III. Per-Syllabus Coverage Breakdown</h2>
+  <p style="font-size:10pt;color:#374151;margin-bottom:12px;line-height:1.7;text-align:justify;">
+    The table below presents each selected UTD syllabus's individual alignment with the
+    <strong>${result.total_required_keywords}</strong> skills required for <strong>${result.job_role}</strong> roles.
+    Coverage percentage reflects the share of the total required skill set addressed within that single course.
+  </p>
+  <table class="tbl-header no-break">
+    <thead>
+      <tr>
+        <th style="width:35%;">Course / Syllabus</th>
+        <th style="text-align:center;">Academic Domain</th>
+        <th style="text-align:center;">Skills Covered</th>
+        <th style="text-align:center;">Total Required</th>
+        <th style="text-align:left;width:22%;">Coverage</th>
+      </tr>
+    </thead>
+    <tbody>${courseRows}</tbody>
+    <tfoot>
+      <tr>
+        <td colspan="2"><em>Program Total (union of all covered skills)</em></td>
+        <td style="text-align:center;font-weight:700;">${result.total_covered}</td>
+        <td style="text-align:center;">${result.total_required_keywords}</td>
+        <td style="font-weight:700;">${pct}%</td>
+      </tr>
+    </tfoot>
+  </table>
+  <p style="font-size:8.5pt;color:#6b7280;font-style:italic;margin-bottom:8px;">
+    Note: Individual syllabus percentages will not sum to the program total, as multiple syllabi may cover the same skill.
+    The program total reflects the union of all skills covered across syllabi.
+  </p>
+
+  <!-- ══ GAP ANALYSIS — PAGE BREAK ══ -->
+  <div class="page-break"></div>
+
+  <!-- ══ HIGH-PRIORITY GAPS ══ -->
+  <h2>IV. High-Priority Curriculum Gaps</h2>
+  <p style="font-size:10pt;color:#374151;margin-bottom:12px;line-height:1.7;text-align:justify;">
+    The following <strong>${Math.min(15, result.missing_keywords.length)} skills</strong> represent the
+    highest-priority curriculum gaps — they appear most frequently in <strong>${result.job_role}</strong>
+    job postings and are entirely absent from the selected UTD syllabi. These should be considered
+    as priority additions or enhancements in curriculum development planning.
+  </p>
+  <table class="priority-table no-break">
+    <thead><tr><th style="width:30px;">#</th><th>Skill / Competency</th><th>Status</th></tr></thead>
+    <tbody>${topMissingRows}</tbody>
+  </table>
+
+  <!-- ══ ALL MISSING SKILLS ══ -->
+  <h2>V. Complete Missing Skills Inventory (${result.missing_keywords.length} Skills)</h2>
+  <div class="interp-box" style="margin-bottom:14px;">
+    The following <strong>${result.missing_keywords.length} skills</strong> were identified in
+    <strong>${result.jobs_matched} ${result.job_role} job postings</strong> but are not addressed in
+    any of the ${selectedCourses.length} selected UTD syllab${selectedCourses.length === 1 ? 'us' : 'i'}.
+    Skills are listed in order of market frequency (left to right, top to bottom).
+  </div>
+  <div class="kw-block">
+    ${kwSection(result.missing_keywords.slice(0, 100), '#7f1d1d', '#fff1f2', '#fecaca')}
+  </div>
+
+  <!-- ══ COVERED SKILLS ══ -->
+  <h2>VI. Covered Skills — Program Strengths (${result.covered_keywords.length} Skills)</h2>
+  <div class="interp-box" style="margin-bottom:14px;">
+    The following <strong>${result.covered_keywords.length} skills</strong> required for
+    <strong>${result.job_role}</strong> roles are already addressed within the selected UTD curriculum.
+    These represent existing program strengths for this career pathway.
+  </div>
+  <div class="kw-block">
+    ${kwSection(result.covered_keywords, '#065f46', '#ecfdf5', '#a7f3d0')}
+  </div>
+
+  <!-- ══ ANALYZED SYLLABI — PAGE BREAK ══ -->
+  <div class="page-break"></div>
+
+  <!-- ══ COURSE INVENTORY ══ -->
+  <h2>VII. Analyzed UTD Syllabi</h2>
+  <p style="font-size:10pt;color:#374151;margin-bottom:12px;line-height:1.7;">
+    The following ${selectedCourses.length} UTD course syllab${selectedCourses.length === 1 ? 'us' : 'i'} were included in this analysis:
+  </p>
+  <table class="tbl-header no-break">
+    <thead><tr><th style="width:30px;">#</th><th>Course Title</th><th>Academic Domain</th><th style="text-align:center;">Individual Coverage</th></tr></thead>
     <tbody>
-      <tr><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;">Required by Job Role</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;text-align:center;font-weight:600;">${result.total_required_keywords}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">100%</td></tr>
-      <tr><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;">Covered by Program</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;text-align:center;font-weight:600;color:#059669;">${result.total_covered}</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb;text-align:center;color:#059669;">${pct}%</td></tr>
-      <tr><td style="padding:6px 12px;border-bottom:2px solid #1a1a2e;">Gap (Missing)</td><td style="padding:6px 12px;border-bottom:2px solid #1a1a2e;text-align:center;font-weight:600;color:#dc2626;">${result.missing_keywords.length}</td><td style="padding:6px 12px;border-bottom:2px solid #1a1a2e;text-align:center;color:#dc2626;">${result.total_required_keywords ? Math.round(result.missing_keywords.length/result.total_required_keywords*100) : 0}%</td></tr>
+      ${selectedCourses.map((c: Course, i: number) => `
+      <tr style="background:${i % 2 === 0 ? '#fff' : '#f9fafb'};">
+        <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;color:#6b7280;">${i+1}.</td>
+        <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;font-weight:600;">${c.title}</td>
+        <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;font-style:italic;color:#374151;font-size:9.5pt;">${c.domain || 'Not classified'}</td>
+        <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;text-align:center;">
+          ${c.coverage_score != null ? `<strong>${c.coverage_score.toFixed(1)}%</strong>` : '<span style="color:#9ca3af;">—</span>'}
+        </td>
+      </tr>`).join('')}
     </tbody>
   </table>
 
-  <div class="page-break"></div>
-  <h2>Missing Skills (${result.missing_keywords.length} skills)</h2>
-  <div class="keyword-section">
-    <p>Skills required for <em>${result.job_role}</em> roles not currently addressed in any selected syllabus. Sorted by frequency across job postings (most critical first).</p>
-    <div>${kwGrid(result.missing_keywords.slice(0, 80), '#991b1b', '#fff1f2', '#fecaca')}</div>
+  <!-- ══ DISCLOSURE ══ -->
+  <div class="info-box" style="margin-top:24px;">
+    <strong>Data Sources &amp; Disclosure</strong>
+    Job posting data was collected via automated web scraping of publicly available job listings.
+    Skill extraction was performed using the Claude Haiku language model (Anthropic, Inc.).
+    This report is generated by SyllabusCheck, an internal curriculum analytics tool developed at UTD.
+    Results are intended to inform curriculum planning discussions and should be interpreted
+    alongside faculty expertise and departmental strategic priorities.
+    Report ID: SC-${Date.now().toString(36).toUpperCase()}
   </div>
 
-  <h2>Covered Skills (${result.covered_keywords.length} skills)</h2>
-  <div class="keyword-section">
-    <p>Skills required for <em>${result.job_role}</em> roles already addressed within the selected curriculum.</p>
-    <div>${kwGrid(result.covered_keywords, '#065f46', '#ecfdf5', '#a7f3d0')}</div>
-  </div>
-
-  <div class="page-break"></div>
-  <h2>Curriculum Recommendations</h2>
-  <h3>High-Priority Additions (Top 10 Missing Skills)</h3>
-  <p style="font-size:10pt;color:#374151;margin-bottom:12px;line-height:1.7;">
-    The following skills appear most frequently in <strong>${result.job_role}</strong> job postings and represent the highest-impact gaps:
-  </p>
-  <ol style="padding-left:20px;font-size:10pt;color:#374151;line-height:2;">
-    ${result.missing_keywords.slice(0, 10).map((k: string) => `<li><strong>${k}</strong></li>`).join('')}
-  </ol>
-
-  <h3>Strengths to Highlight</h3>
-  <p style="font-size:10pt;color:#374151;margin-bottom:12px;line-height:1.7;">
-    The curriculum demonstrates strong coverage in the following areas relevant to <strong>${result.job_role}</strong>:
-  </p>
-  <ul style="padding-left:20px;font-size:10pt;color:#374151;line-height:2;">
-    ${result.covered_keywords.slice(0, 8).map((k: string) => `<li>${k}</li>`).join('')}
-  </ul>
-
-  <h2>Analyzed Syllabi</h2>
-  <ol style="padding-left:20px;font-size:10pt;color:#374151;line-height:2;">
-    ${selectedCourses.map((c: Course) =>
-      `<li><strong>${c.title}</strong>${c.domain ? ` — <em>${c.domain}</em>` : ''}${c.coverage_score != null ? ` (individual coverage: ${c.coverage_score.toFixed(0)}%)` : ''}</li>`
-    ).join('')}
-  </ol>
-
-  <div class="footer">
-    <span>SyllabusCheck · Program Gap Analysis Report</span>
+  <!-- ══ FOOTER ══ -->
+  <div class="doc-footer">
+    <span>The University of Texas at Dallas &mdash; SyllabusCheck Curriculum Analytics</span>
     <span>${date}</span>
-    <span>Confidential — For Academic Use Only</span>
+    <span>Confidential &mdash; For Academic Use Only</span>
   </div>
+
 </div>
 </body>
 </html>`;
@@ -396,7 +722,7 @@ function generateAcademicPDF(result: GapResult, selectedCourses: Course[]) {
   const win  = window.open(url, '_blank');
   if (win) {
     win.onload = () => {
-      setTimeout(() => { win.print(); URL.revokeObjectURL(url); }, 500);
+      setTimeout(() => { win.print(); URL.revokeObjectURL(url); }, 600);
     };
   }
 }
@@ -767,3 +1093,4 @@ export default function ProgramReport() {
     </div>
   );
 }
+
