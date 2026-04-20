@@ -275,11 +275,8 @@ function generateAcademicPDF(result: GapResult, selectedCourses: Course[]) {
     </tr>`;
   }).join('');
 
-  const kwPill = (k: string, color: string, bg: string, border: string) =>
-    `<span style="display:inline-block;margin:2px 3px;padding:3px 11px;background:${bg};color:${color};border:1px solid ${border};border-radius:3px;font-size:9.5pt;font-family:'Times New Roman',serif;letter-spacing:0.2px;">${k}</span>`;
-
-  const kwSection = (kws: string[], color: string, bg: string, border: string) =>
-    kws.map(k => kwPill(k, color, bg, border)).join('');
+  const kwList = (kws: string[]) =>
+    kws.join(', ');
 
   const topMissingRows = result.missing_keywords.slice(0, 15).map((k, i) =>
     `<tr style="background:${i % 2 === 0 ? '#fff' : '#fef2f2'};">
@@ -295,137 +292,152 @@ function generateAcademicPDF(result: GapResult, selectedCourses: Course[]) {
 <meta charset="utf-8"/>
 <title>UTD Curriculum Gap Report — ${result.job_role} — ${date}</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&display=swap');
+  /* ── A4 page setup ── */
+  @page {
+    size: A4 portrait;
+    margin: 18mm 20mm 18mm 20mm;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
+  html, body {
+    width: 210mm;
     font-family: 'Times New Roman', Times, serif;
-    font-size: 11pt;
-    line-height: 1.65;
+    font-size: 10pt;
+    line-height: 1.55;
     color: #111;
     background: #fff;
   }
-  .page { max-width: 760px; margin: 0 auto; padding: 64px 80px; }
+  /* Screen: show as A4 sheet centred */
+  .page {
+    width: 170mm;           /* 210mm - 40mm total margin */
+    margin: 12mm auto;
+    padding: 0;
+    background: #fff;
+  }
+  @media print {
+    html, body { width: 210mm; margin: 0; }
+    .page { width: 100%; margin: 0; padding: 0; }
+    a { text-decoration: none; color: inherit; }
+  }
 
   /* ── UTD Header ── */
   .utd-header {
     text-align: center;
-    padding-bottom: 22px;
-    margin-bottom: 28px;
+    padding-bottom: 14px;
+    margin-bottom: 16px;
     border-bottom: 2.5px solid #154360;
   }
   .utd-seal-line {
-    font-size: 8.5pt;
+    font-size: 7.5pt;
     letter-spacing: 4px;
     text-transform: uppercase;
     color: #154360;
     font-weight: 700;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
   }
-  .utd-university {
-    font-size: 16pt;
-    font-weight: 700;
-    color: #154360;
-    letter-spacing: 0.5px;
-    margin-bottom: 2px;
-  }
+  .utd-university { display: none; }
   .utd-school {
-    font-size: 10pt;
+    font-size: 8.5pt;
     color: #2c6e9e;
     font-style: italic;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
   }
   .report-type-badge {
     display: inline-block;
     background: #154360;
     color: #fff;
-    font-size: 8pt;
-    letter-spacing: 3px;
+    font-size: 7pt;
+    letter-spacing: 2.5px;
     text-transform: uppercase;
-    padding: 3px 14px;
-    margin-bottom: 12px;
+    padding: 2px 10px;
+    margin-bottom: 8px;
   }
   .report-title {
-    font-size: 19pt;
+    font-size: 15pt;
     font-weight: 700;
     color: #111;
-    line-height: 1.25;
-    margin-bottom: 5px;
+    line-height: 1.2;
+    margin-bottom: 4px;
   }
   .report-subtitle {
-    font-size: 12pt;
+    font-size: 10pt;
     color: #374151;
     font-style: italic;
-    margin-bottom: 14px;
+    margin-bottom: 10px;
   }
   .report-meta-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0;
+    display: table;
+    width: 100%;
     border: 1px solid #d1d5db;
-    margin-top: 16px;
-    font-size: 9pt;
+    margin-top: 10px;
+    font-size: 8pt;
   }
+  .report-meta-grid-row { display: table-row; }
   .meta-cell {
-    padding: 7px 14px;
+    display: table-cell;
+    width: 33.33%;
+    padding: 5px 10px;
     border-right: 1px solid #d1d5db;
     color: #374151;
+    vertical-align: top;
   }
   .meta-cell:last-child { border-right: none; }
-  .meta-cell .meta-label { font-weight: 700; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 1px; color: #6b7280; display: block; margin-bottom: 2px; }
-  .meta-cell .meta-value { font-size: 10pt; color: #111; font-weight: 600; }
+  .meta-cell .meta-label { font-weight: 700; text-transform: uppercase; font-size: 6.5pt; letter-spacing: 1px; color: #6b7280; display: block; margin-bottom: 1px; }
+  .meta-cell .meta-value { font-size: 8.5pt; color: #111; font-weight: 600; }
 
   /* ── Section headings ── */
   h2 {
-    font-size: 12pt;
+    font-size: 10pt;
     font-weight: 700;
     color: #154360;
     text-transform: uppercase;
-    letter-spacing: 1.2px;
+    letter-spacing: 1px;
     border-bottom: 1.5px solid #154360;
-    padding-bottom: 5px;
-    margin: 30px 0 14px;
+    padding-bottom: 4px;
+    margin: 18px 0 9px;
   }
   h3 {
-    font-size: 11pt;
+    font-size: 9.5pt;
     font-weight: 700;
     color: #1f2937;
-    margin: 18px 0 8px;
+    margin: 12px 0 5px;
     font-style: italic;
   }
 
   /* ── Executive Summary box ── */
   .exec-summary {
     border: 1.5px solid #154360;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     page-break-inside: avoid;
   }
   .exec-summary-header {
     background: #154360;
     color: #fff;
-    padding: 6px 16px;
-    font-size: 8.5pt;
+    padding: 4px 12px;
+    font-size: 7.5pt;
     letter-spacing: 2px;
     text-transform: uppercase;
     font-weight: 700;
   }
   .exec-summary-body {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0;
+    display: table;
+    width: 100%;
   }
   .exec-stat {
-    padding: 16px 12px;
+    display: table-cell;
+    width: 25%;
+    padding: 10px 8px;
     text-align: center;
     border-right: 1px solid #e5e7eb;
+    vertical-align: middle;
   }
   .exec-stat:last-child { border-right: none; }
-  .exec-stat .stat-value { font-size: 26pt; font-weight: 700; line-height: 1; display: block; }
-  .exec-stat .stat-label { font-size: 7.5pt; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; display: block; }
+  .exec-stat .stat-value { font-size: 20pt; font-weight: 700; line-height: 1; display: block; }
+  .exec-stat .stat-label { font-size: 6.5pt; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; display: block; }
   .rating-badge {
     display: inline-block;
-    padding: 2px 10px;
+    padding: 1px 6px;
     border-radius: 2px;
-    font-size: 8pt;
+    font-size: 7pt;
     font-weight: 700;
     letter-spacing: 1px;
     text-transform: uppercase;
@@ -433,67 +445,58 @@ function generateAcademicPDF(result: GapResult, selectedCourses: Course[]) {
   }
 
   /* ── Tables ── */
-  table { width: 100%; border-collapse: collapse; font-size: 10pt; margin-bottom: 18px; }
-  .tbl-header tr { background: #154360; color: #fff; }
-  .tbl-header th { padding: 8px 10px; text-align: left; font-size: 8.5pt; letter-spacing: 0.8px; font-weight: 600; }
-  .tbl-header th:not(:first-child) { text-align: center; }
-  tfoot td { background: #f1f5f9; font-size: 8.5pt; color: #374151; padding: 5px 10px; font-style: italic; border-top: 1.5px solid #154360; }
+  table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-bottom: 12px; }
+  .tbl-header thead tr { background: #154360; color: #fff; }
+  .tbl-header thead th { padding: 6px 8px; text-align: left; font-size: 8pt; letter-spacing: 0.5px; font-weight: 600; }
+  .tbl-header thead th:not(:first-child) { text-align: center; }
+  tfoot td { background: #f1f5f9; font-size: 7.5pt; color: #374151; padding: 4px 8px; font-style: italic; border-top: 1.5px solid #154360; }
 
-  /* ── Info / methodology box ── */
+  /* ── Info box ── */
   .info-box {
-    border-left: 3.5px solid #154360;
+    border-left: 3px solid #154360;
     background: #f0f7ff;
-    padding: 12px 16px;
-    font-size: 9.5pt;
+    padding: 8px 12px;
+    font-size: 8.5pt;
     color: #1e3a5f;
-    margin-bottom: 18px;
-    line-height: 1.6;
+    margin-bottom: 12px;
+    line-height: 1.5;
   }
-  .info-box strong { display: block; font-size: 9pt; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; color: #154360; }
+  .info-box strong { display: block; font-size: 8pt; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; color: #154360; }
 
-  /* ── Interpretation note ── */
+  /* ── Interp box ── */
   .interp-box {
     border: 1px solid #d1d5db;
     background: #f9fafb;
-    padding: 12px 16px;
-    font-size: 9.5pt;
+    padding: 8px 12px;
+    font-size: 8.5pt;
     color: #374151;
-    margin-bottom: 18px;
-    line-height: 1.6;
+    margin-bottom: 12px;
+    line-height: 1.5;
   }
 
-  /* ── Keywords ── */
-  .kw-block { line-height: 2.2; margin-bottom: 8px; }
-
   /* ── Priority table ── */
-  .priority-table { width: 100%; border-collapse: collapse; font-size: 10pt; margin-bottom: 16px; }
+  .priority-table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-bottom: 12px; }
   .priority-table thead tr { background: #7f1d1d; color: #fff; }
-  .priority-table thead th { padding: 7px 10px; font-size: 8.5pt; letter-spacing: 0.8px; text-align: left; }
-
-  /* ── Funnel table ── */
-  .funnel-table { width: 55%; }
+  .priority-table thead th { padding: 6px 8px; font-size: 8pt; letter-spacing: 0.5px; text-align: left; }
 
   /* ── Footer ── */
   .doc-footer {
-    margin-top: 40px;
-    padding-top: 12px;
+    margin-top: 20px;
+    padding-top: 8px;
     border-top: 2px solid #154360;
-    font-size: 8pt;
+    font-size: 7.5pt;
     color: #6b7280;
-    display: flex;
-    justify-content: space-between;
+    display: table;
+    width: 100%;
     font-style: italic;
   }
+  .footer-left  { display: table-cell; text-align: left; }
+  .footer-mid   { display: table-cell; text-align: center; }
+  .footer-right { display: table-cell; text-align: right; }
 
-  /* ── Print / page breaks ── */
+  /* ── Page breaks ── */
   .page-break { page-break-before: always; }
-  .no-break { page-break-inside: avoid; }
-
-  @media print {
-    body { font-size: 10.5pt; }
-    .page { padding: 40px 52px; }
-    a { text-decoration: none; color: inherit; }
-  }
+  .no-break   { page-break-inside: avoid; }
 </style>
 </head>
 <body>
@@ -502,23 +505,24 @@ function generateAcademicPDF(result: GapResult, selectedCourses: Course[]) {
   <!-- ══ UTD HEADER ══ -->
   <div class="utd-header">
     <div class="utd-seal-line">The University of Texas at Dallas</div>
-    <div class="utd-university">The University of Texas at Dallas</div>
-    <div class="utd-school">Office of Academic Programs · Curriculum Analytics Initiative</div>
+    <div class="utd-school">Office of Academic Programs &nbsp;&middot;&nbsp; Curriculum Analytics Initiative &nbsp;&middot;&nbsp; SyllabusCheck</div>
     <div class="report-type-badge">Curriculum Gap Analysis Report</div>
     <div class="report-title">Program Alignment with Industry Job Market</div>
     <div class="report-subtitle">Target Role: <em>${result.job_role}</em> &nbsp;|&nbsp; ${semester}</div>
     <div class="report-meta-grid">
-      <div class="meta-cell">
-        <span class="meta-label">Report Generated</span>
-        <span class="meta-value">${date}</span>
-      </div>
-      <div class="meta-cell">
-        <span class="meta-label">Job Postings Analyzed</span>
-        <span class="meta-value">${result.jobs_matched} postings for "${result.job_role}"</span>
-      </div>
-      <div class="meta-cell">
-        <span class="meta-label">Syllabi Included</span>
-        <span class="meta-value">${selectedCourses.length} UTD course syllab${selectedCourses.length === 1 ? 'us' : 'i'}</span>
+      <div class="report-meta-grid-row">
+        <div class="meta-cell">
+          <span class="meta-label">Report Generated</span>
+          <span class="meta-value">${date}</span>
+        </div>
+        <div class="meta-cell">
+          <span class="meta-label">Job Postings Analyzed</span>
+          <span class="meta-value">${result.jobs_matched} postings for &ldquo;${result.job_role}&rdquo;</span>
+        </div>
+        <div class="meta-cell">
+          <span class="meta-label">Syllabi Included</span>
+          <span class="meta-value">${selectedCourses.length} UTD course syllab${selectedCourses.length === 1 ? 'us' : 'i'}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -542,18 +546,15 @@ function generateAcademicPDF(result: GapResult, selectedCourses: Course[]) {
         <span class="stat-value" style="color:${pct >= 70 ? '#059669' : pct >= 40 ? '#d97706' : '#dc2626'};">${pct}%</span>
         <span class="stat-label">Overall Coverage</span>
         <span class="rating-badge" style="background:${ratingColor};color:#fff;">${rating}</span>
-      </div>
-      <div class="exec-stat">
+      </div><div class="exec-stat">
         <span class="stat-value" style="color:#154360;">${result.total_required_keywords}</span>
-        <span class="stat-label">Unique Skills in<br/>Job Postings</span>
-      </div>
-      <div class="exec-stat">
+        <span class="stat-label">Unique Skills in Job Postings</span>
+      </div><div class="exec-stat">
         <span class="stat-value" style="color:#059669;">${result.total_covered}</span>
-        <span class="stat-label">Skills Covered<br/>by Program</span>
-      </div>
-      <div class="exec-stat">
+        <span class="stat-label">Skills Covered by Program</span>
+      </div><div class="exec-stat">
         <span class="stat-value" style="color:#dc2626;">${result.missing_keywords.length}</span>
-        <span class="stat-label">Skills Not in<br/>Any Syllabus</span>
+        <span class="stat-label">Skills Not in Any Syllabus</span>
       </div>
     </div>
   </div>
@@ -579,27 +580,35 @@ function generateAcademicPDF(result: GapResult, selectedCourses: Course[]) {
 
   <!-- ══ SKILL COVERAGE FUNNEL ══ -->
   <h2>II. Skill Coverage Funnel</h2>
-  <table class="funnel-table tbl-header no-break">
-    <thead><tr><th style="text-align:left;">Stage</th><th>Count</th><th>Share</th></tr></thead>
+  <table style="width:100%;border-collapse:collapse;font-size:10.5pt;margin-bottom:6px;" class="no-break">
+    <thead>
+      <tr style="background:#154360;color:#fff;">
+        <th style="padding:11px 16px;text-align:left;font-size:10pt;letter-spacing:0.8px;width:65%;">Stage</th>
+        <th style="padding:11px 16px;text-align:center;font-size:10pt;width:17.5%;">Count</th>
+        <th style="padding:11px 16px;text-align:center;font-size:10pt;width:17.5%;">Share</th>
+      </tr>
+    </thead>
     <tbody>
-      <tr>
-        <td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;">Total skills required by market (${result.jobs_matched} postings)</td>
-        <td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;text-align:center;font-weight:700;">${result.total_required_keywords}</td>
-        <td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;text-align:center;">100%</td>
+      <tr style="background:#ffffff;border-left:4px solid #154360;">
+        <td style="padding:12px 16px;border-bottom:1px solid #d1d5db;color:#111;font-weight:600;font-size:10.5pt;">Total skills required by market (${result.jobs_matched} postings)</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #d1d5db;text-align:center;font-weight:700;color:#111;font-size:13pt;">${result.total_required_keywords}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #d1d5db;text-align:center;font-weight:600;color:#111;font-size:11pt;">100%</td>
       </tr>
-      <tr style="background:#f0fdf4;">
-        <td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;">Covered by program (≥1 syllabus)</td>
-        <td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;text-align:center;font-weight:700;color:#059669;">${result.total_covered}</td>
-        <td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;text-align:center;color:#059669;font-weight:600;">${pct}%</td>
+      <tr style="background:#f0fdf4;border-left:4px solid #059669;">
+        <td style="padding:12px 16px;border-bottom:1px solid #d1d5db;color:#111;font-weight:600;font-size:10.5pt;">Covered by program (≥1 syllabus addresses the skill)</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #d1d5db;text-align:center;font-weight:700;color:#111;font-size:13pt;">${result.total_covered}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #d1d5db;text-align:center;font-weight:600;color:#111;font-size:11pt;">${pct}%</td>
       </tr>
-      <tr style="background:#fef2f2;">
-        <td style="padding:7px 10px;border-bottom:2px solid #154360;">Not covered in any syllabus (curriculum gap)</td>
-        <td style="padding:7px 10px;border-bottom:2px solid #154360;text-align:center;font-weight:700;color:#dc2626;">${result.missing_keywords.length}</td>
-        <td style="padding:7px 10px;border-bottom:2px solid #154360;text-align:center;color:#dc2626;font-weight:600;">${gapPct}%</td>
+      <tr style="background:#fff5f5;border-left:4px solid #dc2626;">
+        <td style="padding:12px 16px;border-bottom:2.5px solid #154360;color:#111;font-weight:600;font-size:10.5pt;">Not covered in any syllabus (curriculum gap)</td>
+        <td style="padding:12px 16px;border-bottom:2.5px solid #154360;text-align:center;font-weight:700;color:#111;font-size:13pt;">${result.missing_keywords.length}</td>
+        <td style="padding:12px 16px;border-bottom:2.5px solid #154360;text-align:center;font-weight:600;color:#111;font-size:11pt;">${gapPct}%</td>
       </tr>
     </tbody>
-    <tfoot><tr><td colspan="3">Skills extracted from ${result.jobs_matched} job postings for "${result.job_role}" via automated NLP analysis. Figures reflect unique skills, not cumulative mentions.</td></tr></tfoot>
   </table>
+  <p style="font-size:8.5pt;color:#6b7280;font-style:italic;margin-bottom:20px;">
+    Skills extracted from ${result.jobs_matched} job postings for &ldquo;${result.job_role}&rdquo; via automated NLP analysis. Figures reflect unique skills, not cumulative mentions.
+  </p>
 
   <!-- ══ PER-SYLLABUS BREAKDOWN ══ -->
   <h2>III. Per-Syllabus Coverage Breakdown</h2>
@@ -651,26 +660,30 @@ function generateAcademicPDF(result: GapResult, selectedCourses: Course[]) {
 
   <!-- ══ ALL MISSING SKILLS ══ -->
   <h2>V. Complete Missing Skills Inventory (${result.missing_keywords.length} Skills)</h2>
-  <div class="interp-box" style="margin-bottom:14px;">
-    The following <strong>${result.missing_keywords.length} skills</strong> were identified in
+  <p style="font-size:10pt;color:#374151;margin-bottom:12px;line-height:1.7;text-align:justify;">
+    The following <strong>${result.missing_keywords.length} skills</strong> were identified across
     <strong>${result.jobs_matched} ${result.job_role} job postings</strong> but are not addressed in
     any of the ${selectedCourses.length} selected UTD syllab${selectedCourses.length === 1 ? 'us' : 'i'}.
-    Skills are listed in order of market frequency (left to right, top to bottom).
-  </div>
-  <div class="kw-block">
-    ${kwSection(result.missing_keywords.slice(0, 100), '#7f1d1d', '#fff1f2', '#fecaca')}
-  </div>
+    Listed in order of market frequency (most in-demand first).
+  </p>
+  <p style="font-size:10pt;color:#111;line-height:2.0;text-align:left;">
+    ${result.missing_keywords.slice(0, 150).map((k: string, i: number) =>
+      `<span style="display:inline-block;margin:1px 0;">${i+1}.&nbsp;${k}</span>${i < result.missing_keywords.length - 1 ? '&ensp;&bull;&ensp;' : ''}`
+    ).join('')}
+  </p>
 
   <!-- ══ COVERED SKILLS ══ -->
   <h2>VI. Covered Skills — Program Strengths (${result.covered_keywords.length} Skills)</h2>
-  <div class="interp-box" style="margin-bottom:14px;">
+  <p style="font-size:10pt;color:#374151;margin-bottom:12px;line-height:1.7;text-align:justify;">
     The following <strong>${result.covered_keywords.length} skills</strong> required for
     <strong>${result.job_role}</strong> roles are already addressed within the selected UTD curriculum.
     These represent existing program strengths for this career pathway.
-  </div>
-  <div class="kw-block">
-    ${kwSection(result.covered_keywords, '#065f46', '#ecfdf5', '#a7f3d0')}
-  </div>
+  </p>
+  <p style="font-size:10pt;color:#111;line-height:2.0;text-align:left;">
+    ${result.covered_keywords.map((k: string, i: number) =>
+      `<span style="display:inline-block;margin:1px 0;">${i+1}.&nbsp;${k}</span>${i < result.covered_keywords.length - 1 ? '&ensp;&bull;&ensp;' : ''}`
+    ).join('')}
+  </p>
 
   <!-- ══ ANALYZED SYLLABI — PAGE BREAK ══ -->
   <div class="page-break"></div>
@@ -708,9 +721,9 @@ function generateAcademicPDF(result: GapResult, selectedCourses: Course[]) {
 
   <!-- ══ FOOTER ══ -->
   <div class="doc-footer">
-    <span>The University of Texas at Dallas &mdash; SyllabusCheck Curriculum Analytics</span>
-    <span>${date}</span>
-    <span>Confidential &mdash; For Academic Use Only</span>
+    <div class="footer-left">The University of Texas at Dallas &mdash; SyllabusCheck</div>
+    <div class="footer-mid">${date}</div>
+    <div class="footer-right">Confidential &mdash; For Academic Use Only</div>
   </div>
 
 </div>
@@ -1093,4 +1106,3 @@ export default function ProgramReport() {
     </div>
   );
 }
-
