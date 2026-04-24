@@ -10,7 +10,7 @@ SyllabusCheck identifies the gap between what a university course teaches and wh
 
 | Service | URL |
 |---------|-----|
-| Frontend | [https://krutikashindegh-syllabuscheck.vercel.app](https://krutikashindegh-syllabuscheck.vercel.app) |
+| Frontend | [https://jsom-citm-syllabus-check.vercel.app/](https://jsom-citm-syllabus-check.vercel.app/) |
 
 
 ---
