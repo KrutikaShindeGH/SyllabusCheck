@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import api from '../lib/api'
+import { useAuthStore } from '../store/authStore';
+
 
 interface Job {
   id: string
@@ -47,6 +49,9 @@ export default function JobExplorer() {
   const [city,     setCity]     = useState('')
   const [isRemote, setIsRemote] = useState<string>('')
 
+  const { user } = useAuthStore()
+  const isAdmin = user?.role === 'admin'
+
   useEffect(() => { fetchJobs(); fetchStats() }, [])
 
   async function fetchJobs() {
@@ -77,7 +82,6 @@ export default function JobExplorer() {
     setScraping(true)
     try {
       await api.post('/jobs/scrape')
-      // Poll every 3 seconds until job count increases
       const initialCount = stats?.total || 0
       const poll = setInterval(async () => {
         const { data } = await api.get('/jobs/stats')
@@ -88,7 +92,6 @@ export default function JobExplorer() {
           clearInterval(poll)
         }
       }, 3000)
-      // Stop polling after 2 minutes max
       setTimeout(() => { clearInterval(poll); setScraping(false) }, 120000)
     } catch {
       setScraping(false)
@@ -110,13 +113,15 @@ export default function JobExplorer() {
             {stats && stats.total > 0 ? `${stats.total.toLocaleString()} live job postings` : 'Browse live job postings'}
           </p>
         </div>
-        <button
-          onClick={triggerScrape}
-          disabled={scraping}
-          className="px-4 py-2 bg-[#C75B12] text-white rounded-lg text-sm font-semibold hover:bg-[#A84A0A] transition disabled:opacity-50"
-        >
-          {scraping ? '⏳ Scraping...' : '🔄 Scrape Now'}
-        </button>
+        {isAdmin && (
+          <button
+            onClick={triggerScrape}
+            disabled={scraping}
+            className="px-4 py-2 bg-[#C75B12] text-white rounded-lg text-sm font-semibold hover:bg-[#A84A0A] transition disabled:opacity-50"
+          >
+            {scraping ? '⏳ Scraping...' : '🔄 Scrape Now'}
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -230,4 +235,3 @@ export default function JobExplorer() {
     </div>
   )
 }
-
