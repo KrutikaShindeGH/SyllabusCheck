@@ -178,3 +178,13 @@ async def trigger_keyword_extraction_today(
         "message": f"Queued keyword extraction for {len(job_ids)} jobs scraped today"
     }
 
+@router.post("/reparse-all")
+async def reparse_all(db: AsyncSession = Depends(get_db)):
+    from tasks.nlp_tasks import parse_syllabus
+    result = await db.execute(
+        select(Course).where(Course.status == "pending")
+    )
+    courses = result.scalars().all()
+    for course in courses:
+        parse_syllabus.delay(str(course.id))
+    return {"queued": len(courses)}
