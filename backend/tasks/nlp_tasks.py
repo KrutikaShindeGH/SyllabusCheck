@@ -151,6 +151,7 @@ Respond with ONLY this JSON object and nothing else:
 @celery_app.task(bind=True, max_retries=3)
 def parse_syllabus(self, course_id: str):
     """Parse uploaded syllabus — extract text + topics + UTD department via Claude Haiku."""
+    logger.info(f"[ParseTask] STARTED for course_id={course_id}")
     try:
         from services.parser.pdf import extract_text_from_pdf
         from services.parser.docx_parser import extract_text_from_docx
