@@ -188,3 +188,14 @@ async def reparse_all(db: AsyncSession = Depends(get_db)):
     for course in courses:
         parse_syllabus.delay(str(course.id))
     return {"queued": len(courses)}
+
+@router.post("/recompute-coverage-all")
+async def recompute_coverage_all(db: AsyncSession = Depends(get_db)):
+    from tasks.coverage_tasks import compute_course_coverage
+    result = await db.execute(
+        select(Course).where(Course.status == "parsed")
+    )
+    courses = result.scalars().all()
+    for course in courses:
+        compute_course_coverage.delay(str(course.id))
+    return {"queued": len(courses)}
