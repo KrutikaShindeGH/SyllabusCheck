@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.routes.auth import get_current_user, require_admin
 from core.database import get_db
-from models.models import JobPosting, User
+from models.models import JobPosting, User, Course
 from tasks.scrape_tasks import scrape_all_boards, scrape_single_source
 
 router = APIRouter()
