@@ -199,3 +199,19 @@ async def recompute_coverage_all(db: AsyncSession = Depends(get_db)):
     for course in courses:
         compute_course_coverage.delay(str(course.id))
     return {"queued": len(courses)}
+
+
+@router.post("/reparse-empty")
+async def reparse_empty(db: AsyncSession = Depends(get_db)):
+    from tasks.nlp_tasks import parse_syllabus
+    result = await db.execute(
+        select(Course).where(
+            (Course.parsed_topics == None) | (Course.parsed_topics == [])
+        )
+    )
+    courses = result.scalars().all()
+    for course in courses:
+        course.status = "pending"
+        parse_syllabus.delay(str(course.id))
+    await db.commit()
+    return {"queued": len(courses)}
