@@ -292,11 +292,7 @@ function generateAcademicPDF(result: GapResult, selectedCourses: Course[]) {
 <meta charset="utf-8"/>
 <title>UTD Curriculum Gap Report — ${result.job_role} — ${date}</title>
 <style>
-  /* ── A4 page setup ── */
-  @page {
-    size: A4 portrait;
-    margin: 18mm 20mm 18mm 20mm;
-  }
+  /* ── A4 page setup (margin boxes defined in .doc-footer @page rule below) ── */
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
     width: 210mm;
@@ -479,7 +475,15 @@ function generateAcademicPDF(result: GapResult, selectedCourses: Course[]) {
   .priority-table thead tr { background: #7f1d1d; color: #fff; }
   .priority-table thead th { padding: 6px 8px; font-size: 8pt; letter-spacing: 0.5px; text-align: left; }
 
-  /* ── Footer ── */
+  /* ── Footer (running footer on every printed page) ── */
+  @page {
+    size: A4 portrait;
+    margin: 18mm 20mm 22mm 20mm;
+    @bottom-left   { content: "JSOM - Center for Information Technology and Management"; font-family: 'Times New Roman', serif; font-size: 7pt; color: #6b7280; font-style: italic; border-top: 1.5px solid #154360; padding-top: 4px; }
+    @bottom-center { content: "${date}"; font-family: 'Times New Roman', serif; font-size: 7pt; color: #6b7280; font-style: italic; border-top: 1.5px solid #154360; padding-top: 4px; }
+    @bottom-right  { content: "Confidential — For Academic Use Only"; font-family: 'Times New Roman', serif; font-size: 7pt; color: #6b7280; font-style: italic; border-top: 1.5px solid #154360; padding-top: 4px; }
+  }
+  /* Fallback footer div shown on screen / browsers that ignore @page margin boxes */
   .doc-footer {
     margin-top: 20px;
     padding-top: 8px;
@@ -493,6 +497,8 @@ function generateAcademicPDF(result: GapResult, selectedCourses: Course[]) {
   .footer-left  { display: table-cell; text-align: left; }
   .footer-mid   { display: table-cell; text-align: center; }
   .footer-right { display: table-cell; text-align: right; }
+  /* Hide the fallback footer when printing (running footer takes over) */
+  @media print { .doc-footer { display: none; } }
 
   /* ── Page breaks ── */
   .page-break { page-break-before: always; }
@@ -505,7 +511,7 @@ function generateAcademicPDF(result: GapResult, selectedCourses: Course[]) {
   <!-- ══ UTD HEADER ══ -->
   <div class="utd-header">
     <div class="utd-seal-line">The University of Texas at Dallas</div>
-    <div class="utd-school">Office of Academic Programs &nbsp;&middot;&nbsp; Curriculum Analytics Initiative &nbsp;&middot;&nbsp; SyllabusCheck</div>
+    <div class="utd-school">JSOM - Center for Information Technology and Management</div>
     <div class="report-type-badge">Curriculum Gap Analysis Report</div>
     <div class="report-title">Program Alignment with Industry Job Market</div>
     <div class="report-subtitle">Target Role: <em>${result.job_role}</em> &nbsp;|&nbsp; ${semester}</div>
@@ -721,7 +727,7 @@ function generateAcademicPDF(result: GapResult, selectedCourses: Course[]) {
 
   <!-- ══ FOOTER ══ -->
   <div class="doc-footer">
-    <div class="footer-left">The University of Texas at Dallas &mdash; SyllabusCheck</div>
+    <div class="footer-left">JSOM - Center for Information Technology and Management</div>
     <div class="footer-mid">${date}</div>
     <div class="footer-right">Confidential &mdash; For Academic Use Only</div>
   </div>
