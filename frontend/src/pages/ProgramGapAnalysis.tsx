@@ -727,8 +727,7 @@ function generateAcademicPDF(result: GapResult, selectedCourses: Course[]) {
 
   <!-- ══ FOOTER ══ -->
   <div class="doc-footer">
-    <div class="footer-left">JSOM - Center for Information Technology and Management</div>
-    <div class="footer-mid">${date}</div>
+    <div class="footer-left">Office of Academic Programs · Curriculum Analytics Initiative · SyllabusCheck</div>
     <div class="footer-right">Confidential &mdash; For Academic Use Only</div>
   </div>
 
