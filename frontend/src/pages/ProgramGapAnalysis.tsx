@@ -479,8 +479,7 @@ function generateAcademicPDF(result: GapResult, selectedCourses: Course[]) {
   @page {
     size: A4 portrait;
     margin: 18mm 20mm 22mm 20mm;
-    @bottom-left   { content: "JSOM - Center for Information Technology and Management"; font-family: 'Times New Roman', serif; font-size: 7pt; color: #6b7280; font-style: italic; border-top: 1.5px solid #154360; padding-top: 4px; }
-    @bottom-center { content: "${date}"; font-family: 'Times New Roman', serif; font-size: 7pt; color: #6b7280; font-style: italic; border-top: 1.5px solid #154360; padding-top: 4px; }
+    @bottom-left   { content: "Office of Academic Programs · Curriculum Analytics Initiative · SyllabusCheck"; font-family: 'Times New Roman', serif; font-size: 7pt; color: #6b7280; font-style: italic; border-top: 1.5px solid #154360; padding-top: 4px; }
     @bottom-right  { content: "Confidential — For Academic Use Only"; font-family: 'Times New Roman', serif; font-size: 7pt; color: #6b7280; font-style: italic; border-top: 1.5px solid #154360; padding-top: 4px; }
   }
   /* Fallback footer div shown on screen / browsers that ignore @page margin boxes */
